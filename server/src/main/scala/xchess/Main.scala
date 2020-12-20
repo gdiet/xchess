@@ -10,9 +10,12 @@ import scala.io.StdIn
 
 object Main extends App {
   implicit val system: ActorSystem = ActorSystem("server")
-  val route: Route = path("") { get {
-    complete("hallo")
-  } }
+  val route: Route = {
+    concat(
+      path("ws") { handleWebSocketMessages(WSFlow.greeter) },
+      get { complete("this is xchess") }
+    )
+  }
   val bindingFuture = Http()(system).newServerAt("localhost", 8080).bind(route)
   println(s"xchess server online at http://localhost:8080/")
   StdIn.readLine()
