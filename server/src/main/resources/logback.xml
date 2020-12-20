@@ -1,0 +1,22 @@
+<configuration>
+    <logger name="akka" level="WARN"/>
+    <logger name="com.typesafe" level="INFO"/>
+    <logger name="io.netty" level="INFO"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date %.-3level %-20logger{12} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <appender name="asyncConsole" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="console"/>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="asyncConsole"/>
+    </root>
+</configuration>
