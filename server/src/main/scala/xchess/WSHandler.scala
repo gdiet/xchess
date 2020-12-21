@@ -36,20 +36,20 @@ object WSHandler extends ClassLogging {
   /** Sets up a WS Message flow connected to a WSHandler Actor instance. */
   def apply(mainActor: ActorRef)(implicit system: ActorSystem): Flow[Message, Message, Any] = {
     import system.dispatcher
-    log.debug(s"Initializing WSFlow.")
-    val flowHandler = system.actorOf(Props(new WSHandler(mainActor)))
+    log.debug(s"Initializing websocket message handling.")
+    val wsHandler = system.actorOf(Props(new WSHandler(mainActor)))
     val source = Source.actorRef[String](
       { case Done => CompletionStrategy.immediately }: PartialFunction[Any, CompletionStrategy],
       PartialFunction.empty[Any, Throwable],
       8,
       OverflowStrategy.fail
-    ).mapMaterializedValue(source => flowHandler ! source).map(TextMessage(_))
+    ).mapMaterializedValue(source => wsHandler ! source).map(TextMessage(_))
     val sink = Sink.foreach[Message] {
       case message: BinaryMessage =>
         message.dataStream.runWith(Sink.ignore) // drain, then ignore
       case message: TextMessage =>
-        message.textStream.limitWeighted(2000)(_.length).runWith(Sink.seq).map(_.mkString).pipeTo(flowHandler)
-    }.mapMaterializedValue(_.transform(Success(_)).pipeTo(flowHandler))
+        message.textStream.limitWeighted(2000)(_.length).runWith(Sink.seq).map(_.mkString).pipeTo(wsHandler)
+    }.mapMaterializedValue(_.transform(Success(_)).pipeTo(wsHandler))
     Flow.fromSinkAndSource[Message, Message](sink, source)
   }
 }
