@@ -19,7 +19,7 @@ class WSHandler(mainActor: ActorRef) extends Actor with ActorLogging {
     case m => log.warning(s"$instance: Sink not configured. Unexpected message: $m")
   }
   def withSink(sink: ActorRef): Receive = {
-    case finished: Try[Done] =>
+    case finished: Try[_] =>
       log.info(s"$instance: Finished with $finished")
       context.stop(self)
     case message: String =>
@@ -34,10 +34,10 @@ object WSHandler extends ClassLogging {
   private val count = new AtomicInteger()
 
   /** Sets up a WS Message flow connected to a WSHandler Actor instance. */
-  def apply(mainActor: ActorRef)(implicit system: ActorSystem): Flow[Message, Message, Any] = {
+  def apply(game: ActorRef)(implicit system: ActorSystem): Flow[Message, Message, Any] = {
     import system.dispatcher
     log.debug(s"Initializing websocket message handling.")
-    val wsHandler = system.actorOf(Props(new WSHandler(mainActor)))
+    val wsHandler = system.actorOf(Props(new WSHandler(game)))
     val source = Source.actorRef[String](
       { case Done => CompletionStrategy.immediately }: PartialFunction[Any, CompletionStrategy],
       PartialFunction.empty[Any, Throwable],

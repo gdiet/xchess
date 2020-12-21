@@ -2,13 +2,15 @@ package xchess
 
 import akka.actor.{Actor, ActorLogging, Props}
 
-object MainActor {
-  def apply(): Props = Props(new MainActor)
+object GameRegistry {
+  def apply(): Props = Props(new GameRegistry)
 }
-class MainActor extends Actor with ActorLogging {
+class GameRegistry extends Actor with ActorLogging {
   override def preStart(): Unit = log.info(s"Started")
   override def postStop(): Unit = log.debug(s"Stopped")
   override def receive: Receive = {
-    case m => log.info(s"received $m")
+    case m =>
+      log.info(s"received $m, reply to $sender")
+      sender ! Some(self)
   }
 }
