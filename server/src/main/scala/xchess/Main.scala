@@ -28,6 +28,7 @@ object Main extends App with ClassLogging {
       // curl http://localhost:8080/games -X POST -d '{"name":"hallo","gameType":"chess","initialFreeze":60,"freeze":5}' -H "Content-Type: application/json"
       entity(as[PostGameBody]) { body => complete(gameRegistry.ask(body).mapTo[StatusCode]) }
     } },
+    getFromDirectory("../client"),
     get { complete("This is xchess.") }
   )
   Http()(system).newServerAt("localhost", 8080).bind(route)

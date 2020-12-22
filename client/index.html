@@ -5,7 +5,11 @@
   <title>xChess</title>
   <link rel="icon" href="data:;base64,="/>
 </head>
-<body style="background-color: grey;">
-<script type="module" src="script/xchess.js"></script>
+<body style="background-color: lightgray;">
+  <p><input  id="name"   type="text"   value="game" > Game Name ... <button type="button" id="join">Join Game</button></p>
+  <p><input  id="type"   type="text"   value="chess"> Game Type</p>
+  <p><input  id="init"   type="number" value="30"   > Seconds to wait before game starts</p>
+  <p><input  id="freeze" type="number" value="20"   > Seconds pieces freeze after moving</p>
+  <p><button id="create" type="button"              >Create Game</button></p>
 </body>
 </html>
