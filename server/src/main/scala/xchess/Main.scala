@@ -2,15 +2,16 @@ package xchess
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import io.circe.generic.auto._
 
 import java.util.concurrent.TimeUnit
 import scala.util.Success
-import scala.util.chaining.scalaUtilChainingOps
 
 object Main extends App with ClassLogging {
   implicit val system: ActorSystem = ActorSystem("server")
@@ -23,6 +24,10 @@ object Main extends App with ClassLogging {
         case _ => complete(StatusCodes.NotFound -> "Game not found.")
       }
     },
+    path("games") { post {
+      // curl http://localhost:8080/games -X POST -d '{"name":"hallo","gameType":"chess","initialFreeze":60,"freeze":5}' -H "Content-Type: application/json"
+      entity(as[PostGameBody]) { body => complete(gameRegistry.ask(body).mapTo[StatusCode]) }
+    } },
     get { complete("This is xchess.") }
   )
   Http()(system).newServerAt("localhost", 8080).bind(route)

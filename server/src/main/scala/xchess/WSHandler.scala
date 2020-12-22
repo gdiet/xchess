@@ -10,9 +10,9 @@ import akka.stream.{CompletionStrategy, OverflowStrategy}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.util.{Success, Try}
 
-class WSHandler(mainActor: ActorRef) extends Actor with ActorLogging {
+class WSHandler(game: ActorRef) extends Actor with ActorLogging {
   val instance: Int = WSHandler.count.incrementAndGet()
-  override def preStart(): Unit = log.info(s"$instance: Started")
+  override def preStart(): Unit = log.info(s"$instance: Started for $game")
   override def postStop(): Unit = log.debug(s"$instance: Stopped")
   override def receive: Receive = {
     case sink: ActorRef => log.debug(s"$instance: Configured sink"); context.become(withSink(sink))

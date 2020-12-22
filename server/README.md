@@ -1,5 +1,9 @@
 # Xchess Server Protocol
 
+## POST /games
+
+` curl http://localhost:8080/games -X POST -d '{"name":"hallo","gameType":"chess","initialFreeze":60,"freeze":5}' -H "Content-Type: application/json"`
+
 ## Websocket /ws/{game name}
 
 All WS messages are JSON text messages.
