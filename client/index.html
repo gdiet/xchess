@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   <title>xChess</title>
-  <link rel="icon" href="data:;base64,="/>
+  <link rel="icon" type="image/png" href="/img/white/King.png"/>
 </head>
 <body style="background-color: lightgray;">
   <script type="text/javascript">
     function get(id) { return document.getElementById(id).value }
     function name() { return encodeURI(get('name')) }
-    function joinGame() { location.href = `/game.html?name=${encodeURI(document.getElementById('name').value)}` }
+    function joinGame(color) { 
+      location.href = `/game.html?name=${encodeURI(document.getElementById('name').value)}&color=${color}`
+    }
     async function createGame() {
       const body = `{"name":"${name()}","gameType":"${get("type")}","initialFreeze":${get("init")},"freeze":${get("freeze")}}`
       const response = await fetch("/games", { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
@@ -17,7 +19,10 @@
     }
   </script>
 
-  <p><input  id="name"   type="text"   value="game" /> Game name &nbsp; &nbsp; <button type="button" onclick="joinGame()">Join Game</button></p>
+  <p><input  id="name"   type="text"   value="game" /> Game name &nbsp;
+    <button type="button" onclick="joinGame('white')">Join Game (White)</button>
+    <button type="button" onclick="joinGame('black')">Join Game (Black)</button>
+  </p>
   <p><input  id="type"   type="text"   value="chess"/> Game type (one of 'chess', 'large')</p>
   <p><input  id="init"   type="number" value="30"   /> Seconds to wait before game starts</p>
   <p><input  id="freeze" type="number" value="20"   /> Seconds pieces freeze after moving</p>
