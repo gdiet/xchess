@@ -1,21 +1,23 @@
+setup()
+
 export function setup() {
   const loc = window.location
-  const game = new URLSearchParams(loc.search).get("name")
-  const wsUrl = `${loc.protocol.replace("http","ws")}//${loc.host}/ws/${game}`
-  const websocket = new WebSocket(wsUrl)
-  websocket.onopen = function(event) {
-    console.log(`Websocket opened.`)
-    websocket.send("hallo")
+  const name = new URLSearchParams(loc.search).get("name")
+  const xc = {
+    color: new URLSearchParams(loc.search).get("color"),
+    name: name,
+    ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
   }
-  websocket.onmessage = function(event) {
-    console.log(`Websocket message: ${event.data}`)
-  }
-  websocket.onerror = function(event) {
-    console.log(`Websocket error.`)
-  }
-  websocket.onclose = function(event) {
-    console.log(`Websocket close.`)
-  }
+  xc.ws.onopen  = _ => console.log(`Websocket opened.`)
+  xc.ws.onerror = _ => console.log(`Websocket error.`)
+  xc.ws.onclose = _ => console.log(`Websocket closed.`)
+  xc.ws.onmessage = receiveBoardLayout(xc)
 }
 
-setup()
+function receiveBoardLayout(xc) { return (event) => {
+  const msg = JSON.parse(event.data)
+  const rows = msg.rows
+  const cols = msg.cols
+  console.log(`Board layout: ${cols} x ${rows}`)
+}}
+

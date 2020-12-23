@@ -9,12 +9,10 @@
   <script type="text/javascript">
     function get(id) { return document.getElementById(id).value }
     function name() { return encodeURI(get('name')) }
-    function joinGame(color) { 
-      location.href = `/game.html?name=${encodeURI(document.getElementById('name').value)}&color=${color}`
-    }
+    function joinGame(color) { location.href = `/game.html?name=${name()}&color=${color}` }
     async function createGame() {
-      const body = `{"name":"${name()}","gameType":"${get("type")}","initialFreeze":${get("init")},"freeze":${get("freeze")}}`
-      const response = await fetch("/games", { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
+      const body = JSON.stringify({name:name(), gameType:get('type'), initialFreeze:get('init'), freeze:get('freeze') })
+      const response = await fetch('/games', { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
       alert(response.statusText)
     }
   </script>
