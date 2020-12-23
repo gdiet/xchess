@@ -1,5 +1,8 @@
 export function setup() {
-  const websocket = new WebSocket("ws://localhost:8080/ws")
+  const loc = window.location
+  const game = new URLSearchParams(loc.search).get("name")
+  const wsUrl = `${loc.protocol.replace("http","ws")}//${loc.host}/ws/${game}`
+  const websocket = new WebSocket(wsUrl)
   websocket.onopen = function(event) {
     console.log(`Websocket opened.`)
     websocket.send("hallo")
