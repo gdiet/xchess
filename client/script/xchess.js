@@ -16,8 +16,13 @@ export function setup() {
 
 function receiveBoardLayout(xc) { return (event) => {
   const msg = JSON.parse(event.data)
-  const rows = msg.rows
-  const cols = msg.cols
-  console.log(`Board layout: ${cols} x ${rows}`)
+  xc.rows = msg.rows
+  xc.cols = msg.cols
+  console.log(`Board layout: ${xc.cols} x ${xc.rows} - ${JSON.stringify(xc)}`)
+  // Create the Pixi Application for the chess board
+  xc.app = new PIXI.Application({width: 640, height: 640})
+  // Set the chess board background
+  xc.app.renderer.backgroundColor = 0x282020
+  // Add the chess board to the HTML document
+  document.body.appendChild(xc.app.view)
 }}
-
