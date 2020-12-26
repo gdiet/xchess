@@ -20,29 +20,43 @@ export function setup() {
   xc.ws.onmessage = receiveBoardLayout(xc)
 }
 
-/* rows, cols: 8  (chess)
-   size      : 80 (adapted to window)
-   app       : pixi app               */
+/* x, y: 8  (chess)
+   size: 80 (adapted to window)
+   app : pixi app               */
 function receiveBoardLayout(xc) { return (event) => {
   const msg = JSON.parse(event.data)
-  xc.rows = msg.rows
-  xc.cols = msg.cols
-  console.log(`Board layout: ${xc.cols} x ${xc.rows} - ${JSON.stringify(xc)}`)
+  xc.x = msg.x
+  xc.y = msg.y
+  console.log(`Board layout: ${xc.x} x ${xc.y}`)
   let maxx = window.innerWidth - 30
   let maxy = window.innerHeight - 30
-  if (msg.cols/msg.rows > maxx/maxy) { xc.size = maxx/msg.cols } else { xc.size = maxy/msg.rows }
+  if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
-  xc.app = new PIXI.Application({width: xc.cols*xc.size, height: xc.rows*xc.size})
+  console.log(`xc: ${JSON.stringify(xc)}`)
+  xc.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
   // Set the chess board background
   xc.app.renderer.backgroundColor = 0x282020
   // Add checkers to chess board
   let checkers = new PIXI.Graphics()
   checkers.beginFill(0xa0a0a0)
-  for (var x = 0; x < xc.cols; x++)
-    for (var y = (x + xc.side) % 2; y < xc.rows; y += 2)
+  for (var x = 0; x < xc.x; x++)
+    for (var y = (x + xc.side) % 2; y < xc.y; y += 2)
       checkers.drawRect(x * xc.size, y * xc.size, xc.size, xc.size);
   checkers.endFill()
   xc.app.stage.addChild(checkers);
   // Add the chess board to the HTML document
   document.body.appendChild(xc.app.view)
+  xc.ws.onmessage = receiveCommand(xc)
 }}
+
+function receiveCommand(xc) { return (event) => {
+  const msg = JSON.parse(event.data)
+  switch (msg.cmd) {
+    case "add": cmdAdd(xc, msg); break
+    default: console.warn(`Unknown command ${msg.cmd}.`)
+  }
+}}
+
+function cmdAdd(xc, msg) {
+  console.log("add")
+}

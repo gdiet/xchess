@@ -12,16 +12,16 @@ All WS messages are JSON text messages.
 
 1) When the WS is established, a single message is sent:
 
-`rows: 8, cols: 8`
+`x: 8, y: 8`
 
 2) The initial board contents are sent as a number of `add` and possibly `plan` messages, possibly with one `winner` message.
 
 3) The game progress is sent like this:
 
-* `add { id: 1, row: 1, col: 1, player: white, piece: rook, freeze: 100 }`
-* `move { id: 1, row: 3, col: 1 }`
+* `add { id: 1, x: 1, y: 1, color: white, piece: rook, freeze: 100 }`
+* `move { id: 1, y: 3, x: 1 }`
 * `remove { id: 1 }`
-* `plan { id: 1, from: {row:1,col:1}, to: {row:3,col:1}, player: white }`
+* `plan { id: 1, from: {y:1,x:1}, to: {y:3,x:1}, color: white }`
 * `unplan { id: 1 }`
 * `winner: black`
 
