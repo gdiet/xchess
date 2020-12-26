@@ -34,10 +34,12 @@ function receiveBoardLayout(xc) { return (event) => {
   // Create the Pixi Application for the chess board
   console.log(`xc: ${JSON.stringify(xc)}`)
   xc.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
-  // Set the chess board background
-  xc.app.renderer.backgroundColor = 0x282020
-  // Add checkers to chess board
   let checkers = new PIXI.Graphics()
+  // Render the chess board background to make it event sensitive
+  checkers.beginFill(0x282020)
+  checkers.drawRect(0, 0, xc.x * xc.size, xc.y * xc.size)
+  checkers.endFill()
+  // Add the checkers
   checkers.beginFill(0xa0a0a0)
   for (var x = 0; x < xc.x; x++)
     for (var y = (x + xc.side) % 2; y < xc.y; y += 2)
@@ -47,6 +49,11 @@ function receiveBoardLayout(xc) { return (event) => {
   // Add the chess board to the HTML document
   document.body.appendChild(xc.app.view)
   xc.ws.onmessage = receiveCommand(xc)
+  // Set up interaction with the chess board
+  xc.app.stage.interactive = true
+  xc.app.stage.on('pointerdown', (event) => {
+    console.log(`pointerdown ${JSON.stringify(event.data.global)}`)
+ })
 }}
 
 function receiveCommand(xc) { return (event) => {
