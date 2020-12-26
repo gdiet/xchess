@@ -31,7 +31,7 @@ object Main extends App with ClassLogging {
     getFromDirectory("../client"),
     get { complete("This is xchess.") }
   )
-  Http()(system).newServerAt("localhost", 8080).bind(route)
-  println(s"xchess server online at http://localhost:8080/")
+  Http()(system).newServerAt("0.0.0.0", 8080).bind(route)
+  println(s"xchess server online at http://0.0.0.0:8080/")
   Thread.sleep(Long.MaxValue)
 }
