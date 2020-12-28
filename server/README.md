@@ -18,7 +18,7 @@ All WS messages are JSON text messages.
 
 3) The game progress is sent like this:
 
-* `add { id: 1, x: 1, y: 1, color: white, piece: rook, freeze: 100 }`
+* `add { id: 1, x: 1, y: 1, color: white, piece: Rook, freeze: 100 }`
 * `move { id: 1, y: 3, x: 1 }`
 * `remove { id: 1 }`
 * `plan { id: 1, from: {y:1,x:1}, to: {y:3,x:1}, color: white }`

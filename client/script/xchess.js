@@ -32,7 +32,7 @@ function receiveBoardLayout(xc) { return (event) => {
   let maxy = window.innerHeight - 30
   if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
-  console.log(`xc: ${JSON.stringify(xc)}`)
+  console.log(`Chess board: ${JSON.stringify(xc)}`)
   xc.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
   let checkers = new PIXI.Graphics()
   // Render the chess board background to make it event sensitive
@@ -65,5 +65,5 @@ function receiveCommand(xc) { return (event) => {
 }}
 
 function cmdAdd(xc, msg) {
-  console.log("add")
+  console.log(`add ${JSON.stringify(msg)}`)
 }
