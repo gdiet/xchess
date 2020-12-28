@@ -8,6 +8,7 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 
 import java.util.concurrent.atomic.AtomicInteger
+import scala.concurrent.duration.DurationInt
 import scala.util.{Success, Try}
 
 class WSHandler(game: ActorRef) extends Actor with ActorLogging {
@@ -21,6 +22,7 @@ class WSHandler(game: ActorRef) extends Actor with ActorLogging {
       context.become(withSink(sink))
       log.debug(s"$instance: Configured sink")
       game ! GameActor.ClientConnected
+      context.system.scheduler.scheduleAtFixedRate(15.seconds, 15.seconds, self, ForWS("""{"cmd":"keepalive"}"""))(context.dispatcher)
     case m =>
       log.warning(s"$instance: Sink not configured. Unexpected message: $m")
   }

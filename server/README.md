@@ -24,6 +24,7 @@ All WS messages are JSON text messages.
 * `plan { id: 1, from: {y:1,x:1}, to: {y:3,x:1}, color: white }`
 * `unplan { id: 1 }`
 * `winner: black`
+* `keepalive`
 
 ### Client To Server
 

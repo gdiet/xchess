@@ -70,10 +70,11 @@ function receiveBoardLayout(xc) { return (event) => {
 
 function receiveCommand(xc) { return (event) => {
   const msg = JSON.parse(event.data)
-  console.log(JSON.stringify(msg))
+  console.debug(JSON.stringify(msg))
   switch (msg.cmd) {
     case "add": cmdAdd(xc, msg); break
-    default: console.warn(`Unknown command ${msg.cmd}.`)
+    case "keepalive": /* nothing to do */ break
+    default: console.warn(`Unknown command ${msg.cmd}.`); break
   }
 }}
 
