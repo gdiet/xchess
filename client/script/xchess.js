@@ -33,9 +33,10 @@ function setup(xc) {
   xc.ws.onmessage = receiveBoardLayout(xc)
 }
 
-/* x, y: 8  (chess)
-   size: 80 (adapted to window)
-   app : pixi app               */
+/* x, y   : 8  (chess)
+   size   : 80 (adapted to window)
+   app    : pixi app
+   sprites: Map(id -> sprite)      */
 function receiveBoardLayout(xc) { return (event) => {
   const msg = JSON.parse(event.data)
   xc.x = msg.x
@@ -60,6 +61,9 @@ function receiveBoardLayout(xc) { return (event) => {
   xc.app.stage.addChild(checkers);
   // Add the chess board to the HTML document
   document.body.appendChild(xc.app.view)
+  // Initialize sprites map
+  xc.sprites = new Map()
+  // Initialize command handling
   xc.ws.onmessage = receiveCommand(xc)
   // Set up interaction with the chess board
   xc.app.stage.interactive = true
@@ -73,6 +77,7 @@ function receiveCommand(xc) { return (event) => {
   console.debug(JSON.stringify(msg))
   switch (msg.cmd) {
     case "add": cmdAdd(xc, msg); break
+    case "remove": cmdRemove(xc, msg); break
     case "keepalive": /* nothing to do */ break
     default: console.warn(`Unknown command ${msg.cmd}.`); break
   }
@@ -84,5 +89,14 @@ function cmdAdd(xc, msg) {
   sprite.height = xc.size
   sprite.x = msg.x * xc.size
   sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
+  xc.sprites.set(msg.id, sprite)
   xc.app.stage.addChild(sprite)
+}
+
+function cmdRemove(xc, msg) {
+  if (xc.sprites.has(msg.id)) {
+    const sprite = xc.sprites.get(msg.id)
+    xc.app.stage.removeChild(sprite)
+    xc.sprites.delete(msg.id)
+  } else log.warn(`Remove: ID ${msg.id} not found.`)
 }

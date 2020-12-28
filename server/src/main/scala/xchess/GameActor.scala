@@ -32,6 +32,10 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       }
       state.winner.foreach(winner => sender() ! WSHandler.ForWS(s"""{"winner":"$winner"}"""))
       // TODO send planned moves
+      Thread.sleep(2000)
+      sender() ! WSHandler.ForWS(s"""{"cmd":"move","id":13,"x":5,"y":2,"freeze": 5000}""")
+      Thread.sleep(2000)
+      sender() ! WSHandler.ForWS(s"""{"cmd":"remove","id":8}""")
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
     case m =>
