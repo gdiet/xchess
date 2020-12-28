@@ -1,19 +1,31 @@
-setup()
+loadTextures()
+
+/* res: texture resources */
+function loadTextures() {
+  const loader = PIXI.Loader.shared; // semicolon needed before next line
+  ["Bishop", "King", "Knight", "Pawn", "Queen", "Rook"].forEach(piece =>
+    ["black","white"].forEach(color =>
+      loader.add(`${color}${piece}`, `/img/${color}/${piece}.png`)
+    )
+  )
+  loader.load((_, resources) => {
+    console.log(`Piece images loaded.`)
+    setup({res: resources})
+  })
+}
 
 /* color: white     | black
    side : 0 (white) | 1 (black)
    name : chess or large or ...
    ws   : websocket             */
-export function setup() {
+function setup(xc) {
   const loc = window.location
   const name = new URLSearchParams(loc.search).get("name")
-  const xc = {
-    color: new URLSearchParams(loc.search).get("color"),
-    name: name,
-    ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
-  }
+  xc.color = new URLSearchParams(loc.search).get("color")
+  xc.name = name
+  xc.ws = new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
   xc.side = xc.color == "white" ? 0 : 1
-  console.log(`side: ${xc.side}`)
+  console.log(`Setup OK for side ${xc.side}.`)
   xc.ws.onopen  = _ => console.log(`Websocket opened.`)
   xc.ws.onerror = _ => console.log(`Websocket error.`)
   xc.ws.onclose = _ => console.log(`Websocket closed.`)
@@ -27,12 +39,11 @@ function receiveBoardLayout(xc) { return (event) => {
   const msg = JSON.parse(event.data)
   xc.x = msg.x
   xc.y = msg.y
-  console.log(`Board layout: ${xc.x} x ${xc.y}`)
+  console.log(`Board layout ${xc.x} x ${xc.y}.`)
   let maxx = window.innerWidth - 30
   let maxy = window.innerHeight - 30
   if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
-  console.log(`Chess board: ${JSON.stringify(xc)}`)
   xc.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
   let checkers = new PIXI.Graphics()
   // Render the chess board background to make it event sensitive
