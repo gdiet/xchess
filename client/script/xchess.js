@@ -8,14 +8,15 @@ function loadTextures() {
       loader.add(`${color}${piece}`, `/img/${color}/${piece}.png`)
     )
   )
+  loader.onError.add(e => console.error(`Error ${e}.`))
   loader.load((_, resources) => {
     console.log(`Piece images loaded.`)
     setup({res: resources})
   })
 }
 
-/* color: white     | black
-   side : 0 (white) | 1 (black)
+/* color: white | black
+   white: true  | false
    name : chess or large or ...
    ws   : websocket             */
 function setup(xc) {
@@ -24,8 +25,8 @@ function setup(xc) {
   xc.color = new URLSearchParams(loc.search).get("color")
   xc.name = name
   xc.ws = new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
-  xc.side = xc.color == "white" ? 0 : 1
-  console.log(`Setup OK for side ${xc.side}.`)
+  xc.white = xc.color == "white"
+  console.log(`Setup OK for ${xc.white ? 'white':'black'}.`)
   xc.ws.onopen  = _ => console.log(`Websocket opened.`)
   xc.ws.onerror = _ => console.log(`Websocket error.`)
   xc.ws.onclose = _ => console.log(`Websocket closed.`)
@@ -53,7 +54,7 @@ function receiveBoardLayout(xc) { return (event) => {
   // Add the checkers
   checkers.beginFill(0xa0a0a0)
   for (var x = 0; x < xc.x; x++)
-    for (var y = (x + xc.side) % 2; y < xc.y; y += 2)
+    for (var y = xc.white ? x%2 : (x+1)%2; y < xc.y; y += 2)
       checkers.drawRect(x * xc.size, y * xc.size, xc.size, xc.size);
   checkers.endFill()
   xc.app.stage.addChild(checkers);
@@ -69,6 +70,7 @@ function receiveBoardLayout(xc) { return (event) => {
 
 function receiveCommand(xc) { return (event) => {
   const msg = JSON.parse(event.data)
+  console.log(JSON.stringify(msg))
   switch (msg.cmd) {
     case "add": cmdAdd(xc, msg); break
     default: console.warn(`Unknown command ${msg.cmd}.`)
@@ -76,5 +78,10 @@ function receiveCommand(xc) { return (event) => {
 }}
 
 function cmdAdd(xc, msg) {
-  console.log(`add ${JSON.stringify(msg)}`)
+  const sprite = new PIXI.Sprite(xc.res[`${msg.color}${msg.piece}`].texture)
+  sprite.width = xc.size
+  sprite.height = xc.size
+  sprite.x = msg.x * xc.size
+  sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
+  xc.app.stage.addChild(sprite)
 }
