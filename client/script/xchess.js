@@ -85,9 +85,10 @@ function receiveCommand(xt, xc) { return (event) => {
   const msg = JSON.parse(event.data)
   console.debug(JSON.stringify(msg))
   switch (msg.cmd) {
-    case "add": cmdAdd(xt, xc, msg); break
+    case "add"   : cmdAdd   (xt, xc, msg); break
+    case "move"  : cmdMove  (xt, xc, msg); break
     case "remove": cmdRemove(xt, xc, msg); break
-    case "keepalive": /* nothing to do */ break
+    case "keepalive": /* nothing to do */  break
     default: console.warn(`Unknown command ${msg.cmd}.`); break
   }
 }}
@@ -101,6 +102,16 @@ function cmdAdd(xt, xc, msg) {
   sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
   xc.pieces.set(msg.id,{sprite:sprite, color:msg.color, piece:msg.piece, x:msg.x, y:msg.y})
   xt.app.stage.addChild(sprite)
+}
+
+function cmdMove(xt, xc, msg) {
+  if (xc.pieces.has(msg.id)) {
+    const entry = xc.pieces.get(msg.id)
+    entry.sprite.x = msg.x * xc.size
+    entry.sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
+    if (!xc.delId(entry.x,entry.y)) console.warn(`Move: ${[entry.x,entry.y]} not found.`)
+    xc.setId(entry.x,entry.y, msg.id)
+  } else console.warn(`Move: ID ${msg.id} not found.`)
 }
 
 function cmdRemove(xt, xc, msg) {
