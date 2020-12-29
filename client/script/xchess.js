@@ -33,11 +33,11 @@ function setup(xt) {
   xt.ws.onmessage = receiveBoardLayout(xt, xc)
 }
 
-/* x, y   : 8  (chess)
+/* x, y   : 8  (chess) ... use Y(y) to allow for board orientation
    size   : 80 (adapted to window)
    app    : pixi app
    pieces : Map(id -> {sprite, color, piece, x, y})
-   ids    : Map(x/y -> id ... use hasId, id, deleteId
+   ids    : Map(x/y -> id ... use setId, hasId, getId, delId
    
    xt: Technical resources might have problems with JSON.stringify
    xc: Logical resources that can be used with JSON.stringify      */
@@ -72,6 +72,8 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xc.hasId = function(x,y       ){return this.ids.has   (x*100+y       )}
   xc.getId = function(x,y       ){return this.ids.get   (x*100+y       )}
   xc.delId = function(x,y       ){return this.ids.delete(x*100+y       )}
+  // Set up a y coordinate helper function
+  xc.Y = xc.white ? function(y){return this.y-1-y} : function(y){return y}
   // Initialize command handling
   xt.ws.onmessage = receiveCommand(xt, xc)
   // Set up interaction with the chess board
@@ -99,7 +101,7 @@ function cmdAdd(xt, xc, msg) {
   sprite.width = xc.size
   sprite.height = xc.size
   sprite.x = msg.x * xc.size
-  sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
+  sprite.y = xc.Y(msg.y) * xc.size
   xc.pieces.set(msg.id,{sprite:sprite, color:msg.color, piece:msg.piece, x:msg.x, y:msg.y})
   xt.app.stage.addChild(sprite)
 }
@@ -107,8 +109,21 @@ function cmdAdd(xt, xc, msg) {
 function cmdMove(xt, xc, msg) {
   if (xc.pieces.has(msg.id)) {
     const entry = xc.pieces.get(msg.id)
-    entry.sprite.x = msg.x * xc.size
-    entry.sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
+    let ticks = 20
+    const dx = (msg.x - entry.x) * xc.size / ticks
+    const dy = (xc.Y(msg.y) - xc.Y(entry.y)) * xc.size / ticks
+    function move(delta) {
+      ticks = ticks - 1
+      if (ticks > 0) {
+        entry.sprite.x = entry.sprite.x + delta * dx
+        entry.sprite.y = entry.sprite.y + delta * dy
+      } else {
+        entry.sprite.x = msg.x * xc.size
+        entry.sprite.y = xc.Y(msg.y) * xc.size
+        xt.app.ticker.remove(move)
+      }
+    }
+    xt.app.ticker.add(move)
     if (!xc.delId(entry.x,entry.y)) console.warn(`Move: ${[entry.x,entry.y]} not found.`)
     xc.setId(entry.x,entry.y, msg.id)
   } else console.warn(`Move: ID ${msg.id} not found.`)
