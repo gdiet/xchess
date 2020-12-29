@@ -1,6 +1,6 @@
 loadTextures()
 
-/* res: texture resources */
+/* xt.res: texture resources */
 function loadTextures() {
   const loader = PIXI.Loader.shared; // semicolon needed before next line
   ["Bishop", "King", "Knight", "Pawn", "Queen", "Rook"].forEach(piece =>
@@ -18,26 +18,30 @@ function loadTextures() {
 /* color: white | black
    white: true  | false
    name : chess or large or ...
-   ws   : websocket             */
-function setup(xc) {
+   xt.ws: websocket             */
+function setup(xt) {
   const loc = window.location
   const name = new URLSearchParams(loc.search).get("name")
-  xc.color = new URLSearchParams(loc.search).get("color")
+  const xc = { color: new URLSearchParams(loc.search).get("color") }
   xc.name = name
-  xc.ws = new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
   xc.white = xc.color == "white"
   console.log(`Setup OK for ${xc.white ? 'white':'black'}.`)
-  xc.ws.onopen  = _ => console.log(`Websocket opened.`)
-  xc.ws.onerror = _ => console.log(`Websocket error.`)
-  xc.ws.onclose = _ => console.log(`Websocket closed.`)
-  xc.ws.onmessage = receiveBoardLayout(xc)
+  xt.ws = new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
+  xt.ws.onopen  = _ => console.log(`Websocket opened.`)
+  xt.ws.onerror = _ => console.log(`Websocket error.`)
+  xt.ws.onclose = _ => console.log(`Websocket closed.`)
+  xt.ws.onmessage = receiveBoardLayout(xt, xc)
 }
 
 /* x, y   : 8  (chess)
    size   : 80 (adapted to window)
    app    : pixi app
-   sprites: Map(id -> sprite)      */
-function receiveBoardLayout(xc) { return (event) => {
+   pieces : Map(id -> {sprite, color, piece, x, y})
+   ids    : Map(x/y -> id ... use hasId, id, deleteId
+   
+   xt: Technical resources might have problems with JSON.stringify
+   xc: Logical resources that can be used with JSON.stringify      */
+function receiveBoardLayout(xt, xc) { return (event) => {
   const msg = JSON.parse(event.data)
   xc.x = msg.x
   xc.y = msg.y
@@ -46,7 +50,7 @@ function receiveBoardLayout(xc) { return (event) => {
   let maxy = window.innerHeight - 30
   if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
-  xc.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
+  xt.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
   let checkers = new PIXI.Graphics()
   // Render the chess board background to make it event sensitive
   checkers.beginFill(0x282020)
@@ -58,45 +62,52 @@ function receiveBoardLayout(xc) { return (event) => {
     for (var y = xc.white ? x%2 : (x+1)%2; y < xc.y; y += 2)
       checkers.drawRect(x * xc.size, y * xc.size, xc.size, xc.size);
   checkers.endFill()
-  xc.app.stage.addChild(checkers);
+  xt.app.stage.addChild(checkers);
   // Add the chess board to the HTML document
-  document.body.appendChild(xc.app.view)
-  // Initialize sprites map
-  xc.sprites = new Map()
+  document.body.appendChild(xt.app.view)
+  // Initialize board contents maps
+  xc.pieces = new Map()
+  xc.ids = new Map()
+  xc.setId = function(x,y, value){return this.ids.set   (x*100+y, value)}
+  xc.hasId = function(x,y       ){return this.ids.has   (x*100+y       )}
+  xc.getId = function(x,y       ){return this.ids.get   (x*100+y       )}
+  xc.delId = function(x,y       ){return this.ids.delete(x*100+y       )}
   // Initialize command handling
-  xc.ws.onmessage = receiveCommand(xc)
+  xt.ws.onmessage = receiveCommand(xt, xc)
   // Set up interaction with the chess board
-  xc.app.stage.interactive = true
-  xc.app.stage.on('pointerdown', (event) => {
+  xt.app.stage.interactive = true
+  xt.app.stage.on('pointerdown', (event) => {
     console.log(`pointerdown ${JSON.stringify(event.data.global)}`)
  })
 }}
 
-function receiveCommand(xc) { return (event) => {
+function receiveCommand(xt, xc) { return (event) => {
   const msg = JSON.parse(event.data)
   console.debug(JSON.stringify(msg))
   switch (msg.cmd) {
-    case "add": cmdAdd(xc, msg); break
-    case "remove": cmdRemove(xc, msg); break
+    case "add": cmdAdd(xt, xc, msg); break
+    case "remove": cmdRemove(xt, xc, msg); break
     case "keepalive": /* nothing to do */ break
     default: console.warn(`Unknown command ${msg.cmd}.`); break
   }
 }}
 
-function cmdAdd(xc, msg) {
-  const sprite = new PIXI.Sprite(xc.res[`${msg.color}${msg.piece}`].texture)
+function cmdAdd(xt, xc, msg) {
+  xc.setId(msg.x, msg.y, msg.id)
+  const sprite = new PIXI.Sprite(xt.res[`${msg.color}${msg.piece}`].texture)
   sprite.width = xc.size
   sprite.height = xc.size
   sprite.x = msg.x * xc.size
   sprite.y = xc.white ? (xc.y - 1 - msg.y) * xc.size : msg.y * xc.size
-  xc.sprites.set(msg.id, sprite)
-  xc.app.stage.addChild(sprite)
+  xc.pieces.set(msg.id,{sprite:sprite, color:msg.color, piece:msg.piece, x:msg.x, y:msg.y})
+  xt.app.stage.addChild(sprite)
 }
 
-function cmdRemove(xc, msg) {
-  if (xc.sprites.has(msg.id)) {
-    const sprite = xc.sprites.get(msg.id)
-    xc.app.stage.removeChild(sprite)
-    xc.sprites.delete(msg.id)
-  } else log.warn(`Remove: ID ${msg.id} not found.`)
+function cmdRemove(xt, xc, msg) {
+  if (xc.pieces.has(msg.id)) {
+    const entry = xc.pieces.get(msg.id)
+    xt.app.stage.removeChild(entry.sprite)
+    xc.pieces.delete(msg.id)
+    if (!xc.delId(entry.x,entry.y)) console.warn(`Remove: ${[entry.x,entry.y]} not found.`)
+  } else console.warn(`Remove: ID ${msg.id} not found.`)
 }
