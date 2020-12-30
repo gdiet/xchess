@@ -29,6 +29,7 @@ object Main extends App with ClassLogging {
       entity(as[PostGameBody]) { body => complete(gameRegistry.ask(body).mapTo[StatusCode]) }
     } },
     getFromDirectory("../client"),
+    pathEndOrSingleSlash { redirect("/index.html", StatusCodes.PermanentRedirect) },
     get { complete("This is xchess.") }
   )
   val port = sys.env.getOrElse("PORT","8080").toInt
