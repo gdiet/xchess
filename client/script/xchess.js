@@ -78,9 +78,11 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xt.ws.onmessage = receiveCommand(xt, xc)
   // Set up interaction with the chess board
   xt.app.stage.interactive = true
-  xt.app.stage.on('pointerdown', (event) => {
-    console.log(`pointerdown ${JSON.stringify(event.data.global)}`)
- })
+  xt.app.stage
+    .on('pointerdown', (event) => dragStart(xt, xc, event.data.global))
+    .on('pointermove', (event) => dragMove(xt, xc, event.data.global))
+    .on('pointerup', (event) => dragEnd(xt, xc, event.data.global))
+    .on('pointerupoutside', (event) => dragEnd(xt, xc, event.data.global))
 }}
 
 function receiveCommand(xt, xc) { return (event) => {
@@ -136,4 +138,15 @@ function cmdRemove(xt, xc, msg) {
     xc.pieces.delete(msg.id)
     if (!xc.delId(entry.x,entry.y)) console.warn(`Remove: ${[entry.x,entry.y]} not found.`)
   } else console.warn(`Remove: ID ${msg.id} not found.`)
+}
+
+function x_y(xc, xy) { return {x: xy.x / xc.size | 0, y: xc.Y(xy.y / xc.size | 0)} }
+function dragStart(xt, xc, xy) {
+  console.log(`dragStart ${xy.x} / ${xy.y} ${JSON.stringify(x_y(xc, xy))}`)
+}
+function dragMove(xt, xc, xy) {
+  // console.log(`dragMove ${xy.x} / ${xy.y}`)
+}
+function dragEnd(xt, xc, xy) {
+  console.log(`dragEnd ${xy.x} / ${xy.y}`)
 }
