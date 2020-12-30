@@ -2,3 +2,5 @@
 build:
   docker:
     web: Dockerfile
+run:
+  web: java -cp 'lib/*' -Xmx64M -XX:+ExitOnOutOfMemoryError xchess.Main
