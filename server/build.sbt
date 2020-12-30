@@ -19,3 +19,11 @@ libraryDependencies ++= Seq(
   "io.circe"          %% "circe-parser"     % "0.13.0",
   "ch.qos.logback"    %  "logback-classic"  % "1.2.3"
 )
+
+lazy val collectJars = taskKey[Unit]("Collects deployment JARs.")
+collectJars := {
+  val jarsDir = baseDirectory.value / "target" / "universal" / "jars"
+  IO.delete(jarsDir)
+  val jars = (Runtime / fullClasspathAsJars).value.map(_.data)
+  jars.foreach(file => IO.copyFile(file, jarsDir / file.name))
+}
