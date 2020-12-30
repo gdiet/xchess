@@ -31,7 +31,8 @@ object Main extends App with ClassLogging {
     getFromDirectory("../client"),
     get { complete("This is xchess.") }
   )
-  Http()(system).newServerAt("0.0.0.0", 8080).bind(route)
-  println(s"xchess server online at http://0.0.0.0:8080/")
+  val port = sys.env.getOrElse("PORT","8080").toInt
+  Http()(system).newServerAt("0.0.0.0", port).bind(route)
+  println(s"xchess server online at http://0.0.0.0:$port/")
   Thread.sleep(Long.MaxValue)
 }
