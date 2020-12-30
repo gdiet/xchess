@@ -31,4 +31,4 @@ COPY client ../client
 # We don't want to run the service as root user
 RUN useradd -lMs /bin/bash docker
 USER docker
-ENTRYPOINT ["java", "-cp", "lib/*", "-Xmx64M", "-XX:+ExitOnOutOfMemoryError", "xchess.Main"]
+CMD [ "java", "-cp", "lib/*", "-Xmx64M", "-XX:+ExitOnOutOfMemoryError", "xchess.Main" ]
