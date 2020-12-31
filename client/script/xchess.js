@@ -60,9 +60,11 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   checkers.beginFill(0xa0a0a0)
   for (var x = 0; x < xc.x; x++)
     for (var y = xc.white ? x%2 : (x+1)%2; y < xc.y; y += 2)
-      checkers.drawRect(x * xc.size, y * xc.size, xc.size, xc.size);
+      checkers.drawRect(x * xc.size, y * xc.size, xc.size, xc.size)
   checkers.endFill()
-  xt.app.stage.addChild(checkers);
+  xt.app.stage.addChild(checkers)
+  // Hide the mouse when dragging - see also dragStart
+  xt.app.renderer.plugins.interaction.cursorStyles.dragging = "none"
   // Add the chess board to the HTML document
   document.body.appendChild(xt.app.view)
   // Initialize board contents maps
@@ -163,6 +165,8 @@ function dragStart(xt, xc) { return xy => {
         console.log(`Drag start: ${JSON.stringify(pos)} ${entry.color} ${entry.piece}`)
         const sprite = addSprite(xt, xc, entry.color, entry.piece, pos.x, pos.y)
         sprite.alpha = 0.5
+        // configure the sprite as "dragging" so the mouse is hidden (see also above "dragging")
+        sprite.interactive = true; sprite.cursor = "dragging"
         xc.dragStart = _ => _
         xc.dragMove  = dragMove(xy.x - sprite.x, xy.y - sprite.y, sprite)
         xc.dragEnd   = dragEnd(xt, xc, sprite)
