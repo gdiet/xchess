@@ -75,7 +75,7 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   // Set up a y coordinate helper function
   xc.Y = xc.white ? function(y){return this.y-1-y} : function(y){return y}
   // Set up drag-drop handling helper functions
-  xc.dragStart = dragStart
+  xc.dragStart = dragStart(xt, xc)
   xc.dragMove  = _ => _
   xc.dragEnd   = _ => _
   // Initialize command handling
@@ -83,10 +83,10 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   // Set up interaction with the chess board
   xt.app.stage.interactive = true
   xt.app.stage
-    .on('pointerdown'     , (event) => xc.dragStart(xt, xc, event.data.global))
-    .on('pointermove'     , (event) => xc.dragMove (xt, xc, event.data.global))
-    .on('pointerup'       , (event) => xc.dragEnd  (xt, xc, event.data.global))
-    .on('pointerupoutside', (event) => xc.dragEnd  (xt, xc, event.data.global))
+    .on('pointerdown'     , (event) => xc.dragStart(event.data.global))
+    .on('pointermove'     , (event) => xc.dragMove (event.data.global))
+    .on('pointerup'       , (event) => xc.dragEnd  (event.data.global))
+    .on('pointerupoutside', (event) => xc.dragEnd  (event.data.global))
 }}
 
 function receiveCommand(xt, xc) { return (event) => {
@@ -101,15 +101,20 @@ function receiveCommand(xt, xc) { return (event) => {
   }
 }}
 
+function addSprite(xt, xc, color, piece, x, y) {
+  const sprite  = new PIXI.Sprite(xt.res[`${color}${piece}`].texture)
+  sprite.width  = xc.size
+  sprite.height = xc.size
+  sprite.x      = xc.size * x
+  sprite.y      = xc.size * xc.Y(y)
+  xt.app.stage.addChild(sprite)
+  return sprite
+}
+
 function cmdAdd(xt, xc, msg) {
   xc.setId(msg.x, msg.y, msg.id)
-  const sprite = new PIXI.Sprite(xt.res[`${msg.color}${msg.piece}`].texture)
-  sprite.width = xc.size
-  sprite.height = xc.size
-  sprite.x = msg.x * xc.size
-  sprite.y = xc.Y(msg.y) * xc.size
+  const sprite = addSprite(xt, xc, msg.color, msg.piece, msg.x, msg.y)
   xc.pieces.set(msg.id,{sprite:sprite, color:msg.color, piece:msg.piece, x:msg.x, y:msg.y})
-  xt.app.stage.addChild(sprite)
 }
 
 function cmdMove(xt, xc, msg) {
@@ -147,22 +152,37 @@ function cmdRemove(xt, xc, msg) {
 }
 
 function x_y(xc, xy) { return {x: xy.x / xc.size | 0, y: xc.Y(xy.y / xc.size | 0)} }
-function dragStart(xt, xc, xy) {
+
+function dragStart(xt, xc) { return xy => {
   const pos = x_y(xc, xy)
-  console.debug(`dragStart ${JSON.stringify(pos)}`)
   if (xc.hasId(pos.x, pos.y)) {
     const id = xc.getId(pos.x, pos.y)
     if (xc.pieces.has(id)) {
       const entry = xc.pieces.get(id)
-      console.log(`dragStart ${entry.color} ${entry.piece}`)
-    }
-  }
-  xc.dragEnd = dragEnd
-}
-function dragMove(xt, xc, xy) {
-}
-function dragEnd(xt, xc, xy) {
+      if (entry.color == xc.color) {
+        console.log(`Drag start: ${JSON.stringify(pos)} ${entry.color} ${entry.piece}`)
+        const sprite = addSprite(xt, xc, entry.color, entry.piece, pos.x, pos.y)
+        sprite.alpha = 0.5
+        xc.dragStart = _ => _
+        xc.dragMove  = dragMove(xy.x - sprite.x, xy.y - sprite.y, sprite)
+        xc.dragEnd   = dragEnd(xt, xc, sprite)
+      } else console.debug(`Drag start on opponent's piece ${JSON.stringify(pos)}`)
+    } else console.warn(`Drag start: ID ${id} not found.`)
+  } else console.debug(`Drag start on empty field ${JSON.stringify(pos)}`)
+}}
+
+function dragMove(dx, dy, sprite) { return xy => {
+  sprite.x = xy.x - dx
+  sprite.y = xy.y - dy
+}}
+
+function dragEnd(xt, xc, sprite) {
+  console.log("dragEnd initialized")
+  return xy => {
   const pos = x_y(xc, xy)
   console.debug(`dragEnd ${JSON.stringify(pos)}`)
-  xc.dragEnd = _ => _
-}
+  xt.app.stage.removeChild(sprite)
+  xc.dragStart = dragStart(xt, xc)
+  xc.dragMove  = _ => _
+  xc.dragEnd   = _ => _
+}}
