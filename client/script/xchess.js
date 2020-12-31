@@ -74,15 +74,19 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xc.delId = function(x,y       ){return this.ids.delete(x*100+y       )}
   // Set up a y coordinate helper function
   xc.Y = xc.white ? function(y){return this.y-1-y} : function(y){return y}
+  // Set up drag-drop handling helper functions
+  xc.dragStart = dragStart
+  xc.dragMove  = _ => _
+  xc.dragEnd   = _ => _
   // Initialize command handling
   xt.ws.onmessage = receiveCommand(xt, xc)
   // Set up interaction with the chess board
   xt.app.stage.interactive = true
   xt.app.stage
-    .on('pointerdown', (event) => dragStart(xt, xc, event.data.global))
-    .on('pointermove', (event) => dragMove(xt, xc, event.data.global))
-    .on('pointerup', (event) => dragEnd(xt, xc, event.data.global))
-    .on('pointerupoutside', (event) => dragEnd(xt, xc, event.data.global))
+    .on('pointerdown'     , (event) => xc.dragStart(xt, xc, event.data.global))
+    .on('pointermove'     , (event) => xc.dragMove (xt, xc, event.data.global))
+    .on('pointerup'       , (event) => xc.dragEnd  (xt, xc, event.data.global))
+    .on('pointerupoutside', (event) => xc.dragEnd  (xt, xc, event.data.global))
 }}
 
 function receiveCommand(xt, xc) { return (event) => {
@@ -127,7 +131,9 @@ function cmdMove(xt, xc, msg) {
     }
     xt.app.ticker.add(move)
     if (!xc.delId(entry.x,entry.y)) console.warn(`Move: ${[entry.x,entry.y]} not found.`)
-    xc.setId(entry.x,entry.y, msg.id)
+    xc.setId(msg.x,msg.y, msg.id)
+    entry.x = msg.x
+    entry.y = msg.y
   } else console.warn(`Move: ID ${msg.id} not found.`)
 }
 
@@ -142,11 +148,21 @@ function cmdRemove(xt, xc, msg) {
 
 function x_y(xc, xy) { return {x: xy.x / xc.size | 0, y: xc.Y(xy.y / xc.size | 0)} }
 function dragStart(xt, xc, xy) {
-  console.log(`dragStart ${xy.x} / ${xy.y} ${JSON.stringify(x_y(xc, xy))}`)
+  const pos = x_y(xc, xy)
+  console.debug(`dragStart ${JSON.stringify(pos)}`)
+  if (xc.hasId(pos.x, pos.y)) {
+    const id = xc.getId(pos.x, pos.y)
+    if (xc.pieces.has(id)) {
+      const entry = xc.pieces.get(id)
+      console.log(`dragStart ${entry.color} ${entry.piece}`)
+    }
+  }
+  xc.dragEnd = dragEnd
 }
 function dragMove(xt, xc, xy) {
-  // console.log(`dragMove ${xy.x} / ${xy.y}`)
 }
 function dragEnd(xt, xc, xy) {
-  console.log(`dragEnd ${xy.x} / ${xy.y}`)
+  const pos = x_y(xc, xy)
+  console.debug(`dragEnd ${JSON.stringify(pos)}`)
+  xc.dragEnd = _ => _
 }
