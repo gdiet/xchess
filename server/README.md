@@ -22,13 +22,13 @@ All WS messages are JSON text messages.
 * `move { id: 1, x: 3, y: 1, freeze: 100 }`
 * `remove { id: 1 }`
 * `plan { id: 1, from: {x:1,y:1}, to: {x:3,y:1}, color: white }`
-* `unplan { id: 1 }`
+* `unplan { id: 1, moved?: true }`
 * `winner: black`
 * `keepalive`
 
 ### Client To Server
 
-The client only sends messages of the type `move { id: 1, row: 3, col: 1 }`. These messages can be
+The client only sends messages of the type `move { id: 1, x: 3, y: 1 }`. These messages can be
 
 * valid move commands,
 * valid plan commands (the piece is currently frozen),

@@ -85,10 +85,10 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   // Set up interaction with the chess board
   xt.app.stage.interactive = true
   xt.app.stage
-    .on('pointerdown'     , (event) => xc.dragStart(event.data.global))
-    .on('pointermove'     , (event) => xc.dragMove (event.data.global))
-    .on('pointerup'       , (event) => xc.dragEnd  (event.data.global))
-    .on('pointerupoutside', (event) => xc.dragEnd  (event.data.global))
+    .on('pointerdown'     , event => xc.dragStart(event.data.global))
+    .on('pointermove'     , event => xc.dragMove (event.data.global))
+    .on('pointerup'       , _ => xc.dragEnd())
+    .on('pointerupoutside', _ => xc.dragEnd())
 }}
 
 function receiveCommand(xt, xc) { return (event) => {
@@ -162,14 +162,14 @@ function dragStart(xt, xc) { return xy => {
     if (xc.pieces.has(id)) {
       const entry = xc.pieces.get(id)
       if (entry.color == xc.color) {
-        console.log(`Drag start: ${JSON.stringify(pos)} ${entry.color} ${entry.piece}`)
+        console.debug(`Drag start: ${JSON.stringify(pos)} ${entry.color} ${entry.piece}`)
         const sprite = addSprite(xt, xc, entry.color, entry.piece, pos.x, pos.y)
         sprite.alpha = 0.5
         // configure the sprite as "dragging" so the mouse is hidden (see also above "dragging")
         sprite.interactive = true; sprite.cursor = "dragging"
         xc.dragStart = _ => _
         xc.dragMove  = dragMove(xy.x - sprite.x, xy.y - sprite.y, sprite)
-        xc.dragEnd   = dragEnd(xt, xc, sprite)
+        xc.dragEnd   = dragEnd(xt, xc, id, sprite)
       } else console.debug(`Drag start on opponent's piece ${JSON.stringify(pos)}`)
     } else console.warn(`Drag start: ID ${id} not found.`)
   } else console.debug(`Drag start on empty field ${JSON.stringify(pos)}`)
@@ -180,11 +180,10 @@ function dragMove(dx, dy, sprite) { return xy => {
   sprite.y = xy.y - dy
 }}
 
-function dragEnd(xt, xc, sprite) {
-  console.log("dragEnd initialized")
-  return xy => {
-  const pos = x_y(xc, xy)
-  console.debug(`dragEnd ${JSON.stringify(pos)}`)
+function dragEnd(xt, xc, id, sprite) { return () => {
+  const pos = x_y(xc, {x: sprite.x + xc.size / 2, y: sprite.y + xc.size / 2})
+  console.debug(`Drag end: ${JSON.stringify(pos)} id ${id}`)
+  xt.ws.send(JSON.stringify({id: id, x: pos.x, y: pos.y}))
   xt.app.stage.removeChild(sprite)
   xc.dragStart = dragStart(xt, xc)
   xc.dragMove  = _ => _
