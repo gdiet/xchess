@@ -10,22 +10,22 @@
   <script type="text/javascript">
     function get(id) { return document.getElementById(id).value }
     function name() { return encodeURI(get('name')) }
-    function joinGame(color) { location.href = `/game.html?name=${name()}&color=${color}` }
-    async function createGame() {
+    async function joinGame(color) {
       const body = JSON.stringify({name:name(), gameType:get('type'), initialFreeze:get('init'), freeze:get('freeze') })
       const response = await fetch('/games', { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
-      alert(response.statusText)
+      console.debug(`Response from attempt to create game: ${response.statusText}`)
+      location.href = `/game.html?name=${name()}&color=${color}`
     }
   </script>
 
-  <p><input  id="name"   type="text"   value="game" /> Game name &nbsp;
-    <button type="button" onclick="joinGame('white')">Join Game (White)</button>
-    <button type="button" onclick="joinGame('black')">Join Game (Black)</button>
-  </p>
-  <p><input  id="type"   type="text"   value="chess"/> Game type (one of 'chess', 'large')</p>
-  <p><input  id="init"   type="number" value="30"   /> Seconds to wait before game starts</p>
-  <p><input  id="freeze" type="number" value="20"   /> Seconds pieces freeze after moving</p>
-
-  <p><button type="button" onclick="createGame()">Create Game</button></p>
+  <p><i>xChess is a multiplayer game. Invite your friends to join you.<br>
+        To play together, participants need to use the same game name.</i></p>
+  <p><input  id="name"   type="text"   value="game" /> Game name</p>
+  <p><button type="button" onclick="joinGame('white')">Join Game (White)</button>
+     <button type="button" onclick="joinGame('black')">Join Game (Black)</button></p>
+  <p><i>If you are the first to join the game, the game will be created with the settings below:</i></p>
+  <p><input  id="type"   type="text"   required value="chess" pattern="chess|large"/> Game type (one of 'chess', 'large')</p>
+  <p><input  id="init"   type="number" required value="30"/> Seconds to wait before game starts</p>
+  <p><input  id="freeze" type="number" required value="20"/> Seconds pieces freeze after moving</p>
 </body>
 </html>
