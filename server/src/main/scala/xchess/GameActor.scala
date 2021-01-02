@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 import xchess.GameActor._
-import xchess.logic.Board
+import xchess.logic.{Board, Plan, XY}
 
 import java.lang.System.{currentTimeMillis => now}
 
@@ -28,13 +28,25 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     case ClientConnected =>
       context.become(game(state.copy(clients = state.clients + sender())))
       send(state.board.size)
-      state.board.map.foreach { case xy -> piece => send(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since))) }
+      state.board.map.foreach { case xy -> piece =>
+        send(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since)))
+        piece.plan.foreach { plan => send(ClientPlan(plan.pid, xy, plan.pxy)) }
+      }
       state.winner.foreach(winner => send(Winner(winner)))
-      // TODO send planned moves
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
-    case As(m @ ClientMove(id, x, y)) =>
-      log.info(s"received $m")
+    case As(ClientMove(id, x, y)) =>
+      import state.board
+      import board.map
+      map.find { case (_, piece) => piece.id == id } foreach { case (xy, piece) =>
+        piece.plan.foreach { plan => send(Unplan(plan.pid)) }
+        // TODO check whether still frozen
+        // TODO validate that plan or move is legal
+        val newPlan = if (xy == XY(x,y)) None else Some(Plan(XY(x,y)))
+        newPlan.foreach { plan => send(ClientPlan(plan.pid, xy, plan.pxy)) }
+        val newPiece = piece.copy(plan = newPlan)
+        context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+      }
     case m =>
       log.info(s"received $m")
   }
