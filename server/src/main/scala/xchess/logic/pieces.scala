@@ -1,6 +1,11 @@
 package xchess.logic
 
-case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long) {
+import java.util.concurrent.atomic.AtomicInteger
+
+case class Plan(pxy: XY, pid: Int = Plan.current.incrementAndGet() )
+object Plan { private val current = new AtomicInteger() }
+
+case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long, plan: Option[Plan]) {
   def color: String = if (isWhite) "white" else "black"
   def name: String = piece.name
 }
@@ -9,7 +14,7 @@ object GamePiece {
   private val allPieces = Seq(King, Queen, Bishop, Knight, Rook, Pawn)
   private val piecesMap = allPieces.map(p => p.letter -> p).toMap
   def unapply(id: Int, letter: Char, since: Long): Option[GamePiece] =
-    piecesMap.get(letter.toUpper).map(GamePiece(id, _, letter.isUpper, since))
+    piecesMap.get(letter.toUpper).map(GamePiece(id, _, letter.isUpper, since, None))
 }
 
 sealed trait Piece {
