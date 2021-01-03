@@ -11,7 +11,7 @@ case class Add(id: Int, x: Int, y: Int, color: String, piece: String, freeze: Lo
 case class Move(id: Int, x: Int, y: Int, cmd: String = "move")
 case class Remove(id: Int, cmd: String = "remove")
 case class ClientPlan(id: Int, color: String, from: XY, to: XY, cmd: String = "plan")
-case class Unplan(id: Int, cmd: String = "unplan")
+case class Unplan(id: Int, moved: Boolean, cmd: String = "unplan")
 case class Winner(winner: String)
 
 case class ClientMove(id: Int, x: Int, y: Int)

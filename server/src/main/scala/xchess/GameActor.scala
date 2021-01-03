@@ -39,8 +39,8 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       import state.board
       import board.map
       map.find { case (_, piece) => piece.id == id } foreach { case (xy, piece) =>
-        piece.plan.foreach { plan => send(Unplan(plan.pid)) }
         // TODO check whether still frozen
+        piece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
         // TODO validate that plan or move is legal
         val newPlan = if (xy == XY(x,y)) None else Some(Plan(XY(x,y)))
         newPlan.foreach { plan => send(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }

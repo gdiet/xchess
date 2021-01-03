@@ -36,6 +36,7 @@ function setup(xt) {
 /* x, y   : 8  (chess) ... use Y(y) to allow for board orientation
    size   : 80 (adapted to window)
    app    : pixi app
+   plans  : Map(id -> arrow graphics object)
    pieces : Map(id -> {sprite, color, piece, x, y})
    ids    : Map(x/y -> id ... use setId, hasId, getId, delId
    
@@ -68,6 +69,7 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   // Add the chess board to the HTML document
   document.body.appendChild(xt.app.view)
   // Initialize board contents maps
+  xc.plans = new Map()
   xc.pieces = new Map()
   xc.ids = new Map()
   xc.setId = function(x,y, value){return this.ids.set   (x*100+y, value)}
@@ -99,6 +101,7 @@ function receiveCommand(xt, xc) { return (event) => {
     case "move"  : cmdMove  (xt, xc, msg); break
     case "remove": cmdRemove(xt, xc, msg); break
     case "plan"  : cmdPlan  (xt, xc, msg); break
+    case "unplan": cmdUnplan(xt, xc, msg); break
     case "keepalive": /* nothing to do */  break
     default: console.warn(`Unknown command ${msg.cmd}.`); break
   }
@@ -148,7 +151,7 @@ function cmdAdd(xt, xc, msg) {
 function cmdMove(xt, xc, msg) {
   if (xc.pieces.has(msg.id)) {
     const entry = xc.pieces.get(msg.id)
-    const ticks = 20
+    let ticks = 20
     const dx = (msg.x - entry.x) * xc.size / ticks
     const dy = (xc.Y(msg.y) - xc.Y(entry.y)) * xc.size / ticks
     function move(delta) {
@@ -180,7 +183,23 @@ function cmdRemove(xt, xc, msg) {
 }
 
 function cmdPlan(xt, xc, msg) {
-  if (msg.color == xc.color) addMove(xt, xc, msg.from, msg.to)
+  if (msg.color == xc.color) xc.plans.set(msg.id, addMove(xt, xc, msg.from, msg.to))
+}
+
+function cmdUnplan(xt, xc, msg) {
+  if (xc.plans.has(msg.id)) {
+    if (!msg.moved) xt.app.stage.removeChild(xc.plans.get(msg.id))
+    else {
+      const arrow = xc.plans.get(msg.id)
+      let ticks = 20
+      function fade() {
+        ticks = ticks - 1
+        if (ticks > 0) arrow.alpha = ticks/20
+        else { xt.app.stage.removeChild(arrow); xt.app.ticker.remove(fade) }
+      }
+      xt.app.ticker.add(fade)
+    }
+  }
 }
 
 function x_y(xc, xy) { return {x: xy.x / xc.size | 0, y: xc.Y(xy.y / xc.size | 0)} }
