@@ -30,7 +30,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       send(state.board.size)
       state.board.map.foreach { case xy -> piece =>
         send(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since)))
-        piece.plan.foreach { plan => send(ClientPlan(plan.pid, xy, plan.pxy)) }
+        piece.plan.foreach { plan => send(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
       }
       state.winner.foreach(winner => send(Winner(winner)))
     case ClientDisconnected =>
@@ -43,7 +43,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
         // TODO check whether still frozen
         // TODO validate that plan or move is legal
         val newPlan = if (xy == XY(x,y)) None else Some(Plan(XY(x,y)))
-        newPlan.foreach { plan => send(ClientPlan(plan.pid, xy, plan.pxy)) }
+        newPlan.foreach { plan => send(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
         val newPiece = piece.copy(plan = newPlan)
         context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
       }

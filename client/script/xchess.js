@@ -89,10 +89,30 @@ function receiveBoardLayout(xt, xc) { return (event) => {
     .on('pointermove'     , event => xc.dragMove (event.data.global))
     .on('pointerup'       , _ => xc.dragEnd())
     .on('pointerupoutside', _ => xc.dragEnd())
-
-  // FIXME remove
-  addMove(xt, xc, {x: 0, y: 0}, {x: 1, y:2})
 }}
+
+function receiveCommand(xt, xc) { return (event) => {
+  const msg = JSON.parse(event.data)
+  console.debug(JSON.stringify(msg))
+  switch (msg.cmd) {
+    case "add"   : cmdAdd   (xt, xc, msg); break
+    case "move"  : cmdMove  (xt, xc, msg); break
+    case "remove": cmdRemove(xt, xc, msg); break
+    case "plan"  : cmdPlan  (xt, xc, msg); break
+    case "keepalive": /* nothing to do */  break
+    default: console.warn(`Unknown command ${msg.cmd}.`); break
+  }
+}}
+
+function addSprite(xt, xc, color, piece, x, y) {
+  const sprite  = new PIXI.Sprite(xt.res[`${color}${piece}`].texture)
+  sprite.width  = xc.size
+  sprite.height = xc.size
+  sprite.x      = xc.size * x
+  sprite.y      = xc.size * xc.Y(y)
+  xt.app.stage.addChild(sprite)
+  return sprite
+}
 
 /*  If we want to keep the moves on top, do something along the lines of
     https://github.com/pixijs/pixi.js/issues/296:
@@ -117,28 +137,6 @@ function addMove(xt, xc, from, to) {
   arrow.rotation = Math.atan2(xc.Y(from.y) - xc.Y(to.y), from.x - to.x)
   xt.app.stage.addChild(arrow)
   return arrow
-}
-
-function receiveCommand(xt, xc) { return (event) => {
-  const msg = JSON.parse(event.data)
-  console.debug(JSON.stringify(msg))
-  switch (msg.cmd) {
-    case "add"   : cmdAdd   (xt, xc, msg); break
-    case "move"  : cmdMove  (xt, xc, msg); break
-    case "remove": cmdRemove(xt, xc, msg); break
-    case "keepalive": /* nothing to do */  break
-    default: console.warn(`Unknown command ${msg.cmd}.`); break
-  }
-}}
-
-function addSprite(xt, xc, color, piece, x, y) {
-  const sprite  = new PIXI.Sprite(xt.res[`${color}${piece}`].texture)
-  sprite.width  = xc.size
-  sprite.height = xc.size
-  sprite.x      = xc.size * x
-  sprite.y      = xc.size * xc.Y(y)
-  xt.app.stage.addChild(sprite)
-  return sprite
 }
 
 function cmdAdd(xt, xc, msg) {
@@ -179,6 +177,10 @@ function cmdRemove(xt, xc, msg) {
     xc.pieces.delete(msg.id)
     if (!xc.delId(entry.x,entry.y)) console.warn(`Remove: ${[entry.x,entry.y]} not found.`)
   } else console.warn(`Remove: ID ${msg.id} not found.`)
+}
+
+function cmdPlan(xt, xc, msg) {
+  if (msg.color == xc.color) addMove(xt, xc, msg.from, msg.to)
 }
 
 function x_y(xc, xy) { return {x: xy.x / xc.size | 0, y: xc.Y(xy.y / xc.size | 0)} }
