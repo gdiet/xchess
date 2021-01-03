@@ -46,12 +46,12 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xc.x = msg.x
   xc.y = msg.y
   console.log(`Board layout ${xc.x} x ${xc.y}.`)
-  let maxx = window.innerWidth - 30
-  let maxy = window.innerHeight - 30
+  const maxx = window.innerWidth - 30
+  const maxy = window.innerHeight - 30
   if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
   xt.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
-  let checkers = new PIXI.Graphics()
+  const checkers = new PIXI.Graphics()
   // Render the chess board background to make it event sensitive
   checkers.beginFill(0x282020)
   checkers.drawRect(0, 0, xc.x * xc.size, xc.y * xc.size)
@@ -89,7 +89,35 @@ function receiveBoardLayout(xt, xc) { return (event) => {
     .on('pointermove'     , event => xc.dragMove (event.data.global))
     .on('pointerup'       , _ => xc.dragEnd())
     .on('pointerupoutside', _ => xc.dragEnd())
+
+  // FIXME remove
+  addMove(xt, xc, {x: 0, y: 0}, {x: 1, y:2})
 }}
+
+/*  If we want to keep the moves on top, do something along the lines of
+    https://github.com/pixijs/pixi.js/issues/296:
+
+    stage.children.sort(function(a,b) {
+        a.zIndex = a.zIndex || 0;
+        b.zIndex = b.zIndex || 0;
+        return b.zIndex - a.zIndex
+    });
+*/
+function addMove(xt, xc, from, to) {
+  const unit = xc.size / 12
+  const length = Math.sqrt((to.x - from.x)**2 + (to.y - from.y)**2) * xc.size
+  const arrow = new PIXI.Graphics()
+  arrow.beginFill(0xe30dee)
+  arrow.drawPolygon(
+    0,0, 2*unit,-unit, 1.5*unit,-.3*unit,
+    length,-.3*unit, length,.3*unit,
+    1.5*unit,.3*unit, 2*unit,unit, 0,0)
+  arrow.position.x = xc.size * (.5 + to.x)
+  arrow.position.y = xc.size * (.5 + xc.Y(to.y))
+  arrow.rotation = Math.atan2(xc.Y(from.y) - xc.Y(to.y), from.x - to.x)
+  xt.app.stage.addChild(arrow)
+  return arrow
+}
 
 function receiveCommand(xt, xc) { return (event) => {
   const msg = JSON.parse(event.data)
@@ -122,7 +150,7 @@ function cmdAdd(xt, xc, msg) {
 function cmdMove(xt, xc, msg) {
   if (xc.pieces.has(msg.id)) {
     const entry = xc.pieces.get(msg.id)
-    let ticks = 20
+    const ticks = 20
     const dx = (msg.x - entry.x) * xc.size / ticks
     const dy = (xc.Y(msg.y) - xc.Y(entry.y)) * xc.size / ticks
     function move(delta) {
