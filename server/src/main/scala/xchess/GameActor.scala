@@ -53,47 +53,26 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
           // Execute move
           // There is not supposed to be any plan because it's not frozen, yet let's make sure...
           gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = true)) }
-          gamePiece.moves(xy)(board.size).find(_.contains(to)) match {
-            case None =>
-              log.info(s"Illegal move to $to for $gamePiece")
-              // Illegal move for this piece
-              val newPiece = gamePiece.copy(plan = None, since = now)
-              context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
-            case Some(steps) =>
-              val intermediate = steps.takeWhile(_ != to)
-              if (intermediate.exists(map.contains)) {
-                log.info(s"Move illegal because a piece is in the way to $to for $gamePiece")
-                // Move illegal because a piece is in the way
-                val newPiece = gamePiece.copy(plan = None, since = now)
-                context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
-              } else {
-                if (gamePiece.piece == Pawn && xy.x != to.x && !map.contains(to)) {
-                  log.info(s"Pawn may not move diagonally unless there's a piece there to $to for $gamePiece")
-                  // Pawn may not move diagonally unless there's a piece there
-                  val newPiece = gamePiece.copy(plan = None, since = now)
-                  context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
-                } else {
-                  log.info(s"$xy -> $to, $gamePiece, ${map.get(to)}")
-                  if (gamePiece.piece == Pawn && xy.x == to.x && map.contains(to)) {
-                    log.info(s"Pawn is blocked from moving forward to $to for $gamePiece")
-                    // Pawn is blocked from moving forward
-                    val newPiece = gamePiece.copy(plan = None, since = now)
-                    context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
-                  } else {
-                    if (map.get(to).exists(_.color == gamePiece.color)) {
-                      log.info(s"Can't capture own piece to $to for $gamePiece")
-                      // Can't capture own piece
-                      val newPiece = gamePiece.copy(plan = None, since = now)
-                      context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
-                    } else {
-                      val newPiece = gamePiece.copy(plan = None, since = now)
-                      val newMap = map - xy + (XY(x,y) -> newPiece)
-                      send(Move(newPiece.id, x, y, freeze(newPiece.since)))
-                      context.become(game(state.copy(board = board.copy(map = newMap))))
-                    }
-                  }
-                }
-              }
+          val steps = gamePiece.moves(xy)(board.size).find(_.contains(to))
+          if (
+            // Illegal move for this piece
+            steps.isEmpty ||
+            // Move illegal because a piece is in the way
+            steps.exists(_.takeWhile(_ != to).exists(map.contains)) ||
+            // Pawn may not move diagonally unless there's a piece there
+            (gamePiece.piece == Pawn && xy.x != to.x && !map.contains(to)) ||
+            // Pawn is blocked by a piece from moving forward
+            (gamePiece.piece == Pawn && xy.x == to.x && map.contains(to)) ||
+            // Can't capture own piece
+            map.get(to).exists(_.color == gamePiece.color)
+          ) {
+            val newPiece = gamePiece.copy(plan = None)
+            context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+          } else {
+            val newPiece = gamePiece.copy(plan = None, since = now)
+            val newMap = map - xy + (XY(x,y) -> newPiece)
+            send(Move(newPiece.id, x, y, freeze(newPiece.since)))
+            context.become(game(state.copy(board = board.copy(map = newMap))))
           }
         }
       }
