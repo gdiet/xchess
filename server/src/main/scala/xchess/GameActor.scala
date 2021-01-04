@@ -51,8 +51,8 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
           context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
         } else {
           // Execute move
-          // There is not supposed to be any plan because it's not frozen, yet let's make sure...
-          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = true)) }
+          // Remove any plan for the piece
+          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = plan.pxy == to)) }
           val steps = gamePiece.moves(xy)(board.size).find(_.contains(to))
           if (
             // Illegal move for this piece
