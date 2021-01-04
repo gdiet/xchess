@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 import xchess.GameActor._
-import xchess.logic.{Board, Pawn, Plan, XY}
+import xchess.logic.{Board, King, Pawn, Plan, XY}
 
 import java.lang.System.{currentTimeMillis => now}
 import scala.util.chaining.scalaUtilChainingOps
@@ -69,10 +69,14 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
             val newPiece = gamePiece.copy(plan = None)
             context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
           } else {
+            map.get(to).foreach(gamePiece => send(Remove(gamePiece.id)))
+            val newWinner = state.winner.orElse(
+              if (map.get(to).exists(_.piece == King)) { send(Winner(gamePiece.color)); Some(gamePiece.color) } else None
+            )
             val newPiece = gamePiece.copy(plan = None, since = now)
-            val newMap = map - xy + (XY(x,y) -> newPiece)
+            val newMap = map - xy + (to -> newPiece)
             send(Move(newPiece.id, x, y, freeze(newPiece.since)))
-            context.become(game(state.copy(board = board.copy(map = newMap))))
+            context.become(game(state.copy(winner = newWinner, board = board.copy(map = newMap))))
           }
         }
       }

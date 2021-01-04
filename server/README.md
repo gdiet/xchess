@@ -23,7 +23,7 @@ All WS messages are JSON text messages.
 * `remove { id: 1 }`
 * `plan { id: 1, from: {x:1,y:1}, to: {x:3,y:1}, color: white }`
 * `unplan { id: 1, moved: true }`
-* `winner: black`
+* `winner { winner: black }`
 * `keepalive`
 
 ### Client To Server

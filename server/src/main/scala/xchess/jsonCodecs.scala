@@ -12,7 +12,7 @@ case class Move(id: Int, x: Int, y: Int, freeze: Long, cmd: String = "move")
 case class Remove(id: Int, cmd: String = "remove")
 case class ClientPlan(id: Int, color: String, from: XY, to: XY, cmd: String = "plan")
 case class Unplan(id: Int, moved: Boolean, cmd: String = "unplan")
-case class Winner(winner: String)
+case class Winner(winner: String, cmd: String = "winner")
 
 case class ClientMove(id: Int, x: Int, y: Int)
 object As { def unapply(fromClient: FromClient): Option[ClientMove] = decode[ClientMove](fromClient.message).toOption }

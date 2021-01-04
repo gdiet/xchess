@@ -176,7 +176,13 @@ function cmdMove(xt, xc, msg) {
 function cmdRemove(xt, xc, msg) {
   if (xc.pieces.has(msg.id)) {
     const entry = xc.pieces.get(msg.id)
-    xt.app.stage.removeChild(entry.sprite)
+    let ticks = 20
+    function fade() {
+      ticks = ticks - 1
+      if (ticks > 0) entry.sprite.alpha = ticks/20
+      else { xt.app.stage.removeChild(entry.sprite); xt.app.ticker.remove(fade) }
+    }
+    xt.app.ticker.add(fade)
     xc.pieces.delete(msg.id)
     if (!xc.delId(entry.x,entry.y)) console.warn(`Remove: ${[entry.x,entry.y]} not found.`)
   } else console.warn(`Remove: ID ${msg.id} not found.`)
@@ -198,6 +204,7 @@ function cmdUnplan(xt, xc, msg) {
         else { xt.app.stage.removeChild(arrow); xt.app.ticker.remove(fade) }
       }
       xt.app.ticker.add(fade)
+      xc.plans.delete(msg.id)
     }
   }
 }
