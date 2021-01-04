@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 import xchess.GameActor._
-import xchess.logic.{Board, Plan, XY}
+import xchess.logic.{Board, Pawn, Plan, XY}
 
 import java.lang.System.{currentTimeMillis => now}
 import scala.util.chaining.scalaUtilChainingOps
@@ -37,25 +37,64 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
     case As(ClientMove(id, x, y)) =>
+      val to = XY(x,y)
       import state.board
       import board.map
-      map.find { case (_, piece) => piece.id == id } foreach { case (xy, piece) =>
-        if (frozen(piece.since)) {
-          piece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
+      map.find { case (_, piece) => piece.id == id } foreach { case (xy, gamePiece) =>
+        if (frozen(gamePiece.since)) {
+          // Plam move
+          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
           val newPlan =
-            if (!piece.moves(xy)(board.size).flatten.contains(XY(x,y))) None
-            else Plan(XY(x,y)).tap(p => send(ClientPlan(p.pid, piece.color, xy, p.pxy))).pipe(Some(_))
-          val newPiece = piece.copy(plan = newPlan)
+            if (!gamePiece.moves(xy)(board.size).flatten.contains(to)) None
+            else Plan(to).tap(p => send(ClientPlan(p.pid, gamePiece.color, xy, p.pxy))).pipe(Some(_))
+          val newPiece = gamePiece.copy(plan = newPlan)
           context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
         } else {
+          // Execute move
           // There is not supposed to be any plan because it's not frozen, yet let's make sure...
-          piece.plan.foreach { plan => send(Unplan(plan.pid, moved = true)) }
-          // TODO validate that move is legal
-          // TODO execute actual move
-          val newPiece = piece.copy(plan = None, since = now)
-          val newMap = map - xy + (XY(x,y) -> newPiece)
-          send(Move(piece.id, x, y))
-          context.become(game(state.copy(board = board.copy(map = newMap))))
+          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = true)) }
+          gamePiece.moves(xy)(board.size).find(_.contains(to)) match {
+            case None =>
+              log.info(s"Illegal move to $to for $gamePiece")
+              // Illegal move for this piece
+              val newPiece = gamePiece.copy(plan = None, since = now)
+              context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+            case Some(steps) =>
+              val intermediate = steps.takeWhile(_ != to)
+              if (intermediate.exists(map.contains)) {
+                log.info(s"Move illegal because a piece is in the way to $to for $gamePiece")
+                // Move illegal because a piece is in the way
+                val newPiece = gamePiece.copy(plan = None, since = now)
+                context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+              } else {
+                if (gamePiece.piece == Pawn && xy.x != to.x && !map.contains(to)) {
+                  log.info(s"Pawn may not move diagonally unless there's a piece there to $to for $gamePiece")
+                  // Pawn may not move diagonally unless there's a piece there
+                  val newPiece = gamePiece.copy(plan = None, since = now)
+                  context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+                } else {
+                  log.info(s"$xy -> $to, $gamePiece, ${map.get(to)}")
+                  if (gamePiece.piece == Pawn && xy.x == to.x && map.contains(to)) {
+                    log.info(s"Pawn is blocked from moving forward to $to for $gamePiece")
+                    // Pawn is blocked from moving forward
+                    val newPiece = gamePiece.copy(plan = None, since = now)
+                    context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+                  } else {
+                    if (map.get(to).exists(_.color == gamePiece.color)) {
+                      log.info(s"Can't capture own piece to $to for $gamePiece")
+                      // Can't capture own piece
+                      val newPiece = gamePiece.copy(plan = None, since = now)
+                      context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+                    } else {
+                      val newPiece = gamePiece.copy(plan = None, since = now)
+                      val newMap = map - xy + (XY(x,y) -> newPiece)
+                      send(Move(newPiece.id, x, y, freeze(newPiece.since)))
+                      context.become(game(state.copy(board = board.copy(map = newMap))))
+                    }
+                  }
+                }
+              }
+          }
         }
       }
     case m =>

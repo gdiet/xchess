@@ -1,17 +1,14 @@
 package xchess.logic
 
-import xchess.ClassLogging
-
 import java.util.concurrent.atomic.AtomicInteger
 
 case class Plan(pxy: XY, pid: Int = Plan.current.incrementAndGet() )
 object Plan { private val current = new AtomicInteger() }
 
-case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long, plan: Option[Plan]) extends ClassLogging {
+case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long, plan: Option[Plan]) {
   def color: String = if (isWhite) "white" else "black"
   def name: String = piece.name
   def moves(xy: XY)(implicit board: XY): Seq[Seq[XY]] = {
-    log.info(s"move $piece $xy")
     if (piece != Pawn) piece.moves(xy) else (isWhite, xy.y) match {
       case (true, 1) => Seq(Seq((-1,1)),Seq((0,1),(0,2)),Seq((1,1))).map(_.flatMap(xy + _))
       case (true, _) => Seq((-1,1),(0,1),(1,1)).flatMap(xy + _).map(Seq(_))

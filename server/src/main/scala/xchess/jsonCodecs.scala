@@ -8,7 +8,7 @@ import xchess.logic.XY
 case class PostGameBody(name: String, gameType: String, initialFreeze: Int, freeze: Int)
 
 case class Add(id: Int, x: Int, y: Int, color: String, piece: String, freeze: Long, cmd: String = "add")
-case class Move(id: Int, x: Int, y: Int, cmd: String = "move")
+case class Move(id: Int, x: Int, y: Int, freeze: Long, cmd: String = "move")
 case class Remove(id: Int, cmd: String = "remove")
 case class ClientPlan(id: Int, color: String, from: XY, to: XY, cmd: String = "plan")
 case class Unplan(id: Int, moved: Boolean, cmd: String = "unplan")
