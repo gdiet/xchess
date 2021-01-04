@@ -9,6 +9,7 @@ import xchess.GameActor._
 import xchess.logic.{Board, Plan, XY}
 
 import java.lang.System.{currentTimeMillis => now}
+import scala.util.chaining.scalaUtilChainingOps
 
 object GameActor {
   def apply(name: String, gameType: String, initialFreeze: Long, freeze: Long): Either[StatusCode, Props] =
@@ -39,13 +40,23 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       import state.board
       import board.map
       map.find { case (_, piece) => piece.id == id } foreach { case (xy, piece) =>
-        // TODO check whether still frozen
-        piece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
-        // TODO validate that plan or move is legal
-        val newPlan = if (xy == XY(x,y)) None else Some(Plan(XY(x,y)))
-        newPlan.foreach { plan => send(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
-        val newPiece = piece.copy(plan = newPlan)
-        context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+        if (frozen(piece.since)) {
+          piece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
+          val newPlan =
+            if (!piece.moves(xy)(board.size).flatten.contains(XY(x,y))) None
+            else Plan(XY(x,y)).tap(p => send(ClientPlan(p.pid, piece.color, xy, p.pxy))).pipe(Some(_))
+          val newPiece = piece.copy(plan = newPlan)
+          context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+        } else {
+          // There is not supposed to be any plan because it's not frozen, yet let's make sure...
+          piece.plan.foreach { plan => send(Unplan(plan.pid, moved = true)) }
+          // TODO validate that move is legal
+          // TODO execute actual move
+          val newPiece = piece.copy(plan = None, since = now)
+          val newMap = map - xy + (XY(x,y) -> newPiece)
+          send(Move(piece.id, x, y))
+          context.become(game(state.copy(board = board.copy(map = newMap))))
+        }
       }
     case m =>
       log.info(s"received $m")
