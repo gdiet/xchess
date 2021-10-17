@@ -1,2 +1,2 @@
-// https://github.com/rtimush/sbt-updates/tags - 15.05.2020 0.5.1
-addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.5.1")
+// https://github.com/rtimush/sbt-updates/tags - 02.08.2021 0.6.0
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.0")
