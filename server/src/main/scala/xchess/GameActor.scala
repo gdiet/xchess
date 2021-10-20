@@ -27,32 +27,34 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
   override def receive: Receive = game(initialState)
   def game(state: GameState): Receive = {
     case ClientConnected =>
+      def reply[T: Encoder](msg: T): Unit = send(sender())(msg)
       context.become(game(state.copy(clients = state.clients + sender())))
-      send(state.board.size)
+      reply(state.board.size)
       state.board.map.foreach { case xy -> piece =>
-        send(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since)))
-        piece.plan.foreach { plan => send(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
+        reply(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since)))
+        piece.plan.foreach { plan => reply(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
       }
-      state.winner.foreach(winner => send(Winner(winner)))
+      state.winner.foreach(winner => reply(Winner(winner)))
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
     case As(ClientMove(id, x, y)) =>
+      def broadcast[T: Encoder](msg: T): Unit = state.clients.foreach(send(_)(msg))
       val to = XY(x,y)
       import state.board
       import board.map
       map.find { case (_, piece) => piece.id == id } foreach { case (xy, gamePiece) =>
         if (frozen(gamePiece.since)) {
           // Plam move
-          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = false)) }
+          gamePiece.plan.foreach { plan => broadcast(Unplan(plan.pid, moved = false)) }
           val newPlan =
             if (!gamePiece.moves(xy)(board.size).flatten.contains(to)) None
-            else Plan(to).tap(p => send(ClientPlan(p.pid, gamePiece.color, xy, p.pxy))).pipe(Some(_))
+            else Plan(to).tap(p => broadcast(ClientPlan(p.pid, gamePiece.color, xy, p.pxy))).pipe(Some(_))
           val newPiece = gamePiece.copy(plan = newPlan)
           context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
         } else {
           // Execute move
           // Remove any plan for the piece
-          gamePiece.plan.foreach { plan => send(Unplan(plan.pid, moved = plan.pxy == to)) }
+          gamePiece.plan.foreach { plan => broadcast(Unplan(plan.pid, moved = plan.pxy == to)) }
           val steps = gamePiece.moves(xy)(board.size).find(_.contains(to))
           if (
             // Illegal move for this piece
@@ -69,13 +71,13 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
             val newPiece = gamePiece.copy(plan = None)
             context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
           } else {
-            map.get(to).foreach(gamePiece => send(Remove(gamePiece.id)))
+            map.get(to).foreach(gamePiece => broadcast(Remove(gamePiece.id)))
             val newWinner = state.winner.orElse(
-              if (map.get(to).exists(_.piece == King)) { send(Winner(gamePiece.color)); Some(gamePiece.color) } else None
+              if (map.get(to).exists(_.piece == King)) { broadcast(Winner(gamePiece.color)); Some(gamePiece.color) } else None
             )
             val newPiece = gamePiece.copy(plan = None, since = now)
             val newMap = map - xy + (to -> newPiece)
-            send(Move(newPiece.id, x, y, freeze(newPiece.since)))
+            broadcast(Move(newPiece.id, x, y, freeze(newPiece.since)))
             context.become(game(state.copy(winner = newWinner, board = board.copy(map = newMap))))
           }
         }
@@ -83,7 +85,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     case m =>
       log.info(s"received $m")
   }
-  def send[T: Encoder](msg: T): Unit = sender() ! WSHandler.ForWS(msg.asJson.noSpaces)
+  def send[T: Encoder](to: ActorRef)(msg: T): Unit = to ! WSHandler.ForWS(msg.asJson.noSpaces)
   def freeze(since: Long): Long = math.max(math.max(0, initialFreezeUntil - now), since + freeze - now)
   def frozen(since: Long): Boolean = now < initialFreezeUntil || now < since + freeze
 }
