@@ -34,6 +34,6 @@ object Main extends App with ClassLogging {
   )
   val port = sys.env.getOrElse("PORT","8080").toInt
   Http()(system).newServerAt("0.0.0.0", port).bind(route)
-  println(s"xchess server online at http://0.0.0.0:$port/")
+  println(s"xchess server online at http://localhost:$port/ - bound to 0.0.0.0")
   Thread.sleep(Long.MaxValue)
 }
