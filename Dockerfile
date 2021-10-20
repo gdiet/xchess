@@ -1,5 +1,5 @@
 ### BUILD
-FROM hseeberger/scala-sbt:11.0.9.1_1.4.4_2.13.4 AS build
+FROM hseeberger/scala-sbt:17.0.0_1.5.5_2.13.6 AS build
 
 # /root is the standard dir of the hseeberger/scala-sbt images
 WORKDIR /root
