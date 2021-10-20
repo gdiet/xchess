@@ -10,18 +10,23 @@ All WS messages are JSON text messages.
 
 ### Server To Client
 
-1) When the WS is established, a single message is sent:
+When the WS is established, a single message is sent defining the board size:
 
-`x: 8, y: 8`
+`{"x":8,"y":8}`
 
-2) The initial board contents are sent as a number of `add` and possibly `plan` messages, possibly with one `winner` message.
+The server sends the initial board contents as a number of `add` and possibly `plan` messages, possibly with one `winner` message. For game progress the server additionally uses `move`, `remove` and `unplan` messages. To avoid websockets closing due to inactivity, the server periodically sends `keepalive` messages.
 
-3) The game progress is sent like this:
+`id` in messages refer to piece IDs that are defined when a piece is added to the board. `freeze` is the remaining freeze time in milliseconds.
 
-* `add { id: 1, x: 1, y: 1, color: white, piece: Rook, freeze: 100 }`
+Message examples:
+
+    {"id":1,"x":4,"y":6,"color":"black","piece":"Rook","freeze":29040,"cmd":"add"}`
+    {"id":1,"color":"black","from":{"x":0,"y":6},"to":{"x":0,"y":4},"cmd":"plan"}
+    {"winner":"black"} // TODO not yet implemented
+    {"cmd":"keepalive"}
+
 * `move { id: 1, x: 3, y: 1, freeze: 100 }`
 * `remove { id: 1 }`
-* `plan { id: 1, from: {x:1,y:1}, to: {x:3,y:1}, color: white }`
 * `unplan { id: 1, moved: true }`
 * `winner { winner: black }`
 * `keepalive`
