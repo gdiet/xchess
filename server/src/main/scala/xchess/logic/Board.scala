@@ -32,7 +32,7 @@ object Board {
     require(lines.nonEmpty && lines.map(_.length).distinct.size == 1)
     val positions = for {
       (line,y) <- lines.zipWithIndex
-      (letter, x) <- line.zipWithIndex
+      (letter, x) <- line.zipWithIndex if letter != '+'
     } yield XY(x, y) -> letter
     val pieces = for {
       ((xy, letter), id) <- positions.zipWithIndex
