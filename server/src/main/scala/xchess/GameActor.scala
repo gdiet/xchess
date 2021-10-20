@@ -9,6 +9,8 @@ import xchess.GameActor._
 import xchess.logic.{Board, King, Pawn, Plan, XY}
 
 import java.lang.System.{currentTimeMillis => now}
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 import scala.util.chaining.scalaUtilChainingOps
 
 object GameActor {
@@ -37,20 +39,23 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       state.winner.foreach(winner => reply(Winner(winner)))
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
-    case As(ClientMove(id, x, y)) =>
+    case message @ As(ClientMove(id, x, y)) =>
       def broadcast[T: Encoder](msg: T): Unit = state.clients.foreach(send(_)(msg))
       val to = XY(x,y)
       import state.board
       import board.map
       map.find { case (_, piece) => piece.id == id } foreach { case (xy, gamePiece) =>
-        if (frozen(gamePiece.since)) {
-          // Plam move
+        val frozen = frozenFor(gamePiece.since)
+        if (frozen > 0) {
+          // Plan move
           gamePiece.plan.foreach { plan => broadcast(Unplan(plan.pid, moved = false)) }
           val newPlan =
             if (!gamePiece.moves(xy)(board.size).flatten.contains(to)) None
             else Plan(to).tap(p => broadcast(ClientPlan(p.pid, gamePiece.color, xy, p.pxy))).pipe(Some(_))
           val newPiece = gamePiece.copy(plan = newPlan)
           context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
+          import context.dispatcher
+          context.system.scheduler.scheduleOnce(Duration(frozen, TimeUnit.MILLISECONDS), self, message)
         } else {
           // Execute move
           // Remove any plan for the piece
@@ -91,5 +96,5 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
   }
   def send[T: Encoder](to: ActorRef)(msg: T): Unit = to ! WSHandler.ForWS(msg.asJson.noSpaces)
   def freeze(since: Long): Long = math.max(math.max(0, initialFreezeUntil - now), since + freeze - now)
-  def frozen(since: Long): Boolean = now < initialFreezeUntil || now < since + freeze
+  def frozenFor(since: Long): Long = math.max(0L, math.max(initialFreezeUntil, since + freeze) - now)
 }
