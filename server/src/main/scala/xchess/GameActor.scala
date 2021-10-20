@@ -71,7 +71,11 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
             val newPiece = gamePiece.copy(plan = None)
             context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
           } else {
-            map.get(to).foreach(gamePiece => broadcast(Remove(gamePiece.id)))
+            map.get(to).foreach { gamePiece =>
+              // remove any plan for a captured piece, then remove piece
+              gamePiece.plan.foreach { plan => broadcast(Unplan(plan.pid, moved = plan.pxy == to)) }
+              broadcast(Remove(gamePiece.id))
+            }
             val newWinner = state.winner.orElse(
               if (map.get(to).exists(_.piece == King)) { broadcast(Winner(gamePiece.color)); Some(gamePiece.color) } else None
             )
