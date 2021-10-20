@@ -19,6 +19,7 @@ object GameActor {
 
   case object ClientConnected
   case object ClientDisconnected
+  case object TerminateIfUnconnected
   case class FromClient(message: String)
 
   private case class GameState(board: Board, clients: Set[ActorRef] = Set(), winner: Option[String] = None)
@@ -27,6 +28,11 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
   override def preStart(): Unit = log.info(s"'$name' Started")
   override def postStop(): Unit = log.debug(s"'$name' Stopped")
   override def receive: Receive = game(initialState)
+  def scheduleTerminationCheck(): Unit = {
+    import context.dispatcher
+    context.system.scheduler.scheduleOnce(Duration(1, TimeUnit.MINUTES), self, TerminateIfUnconnected)
+  }
+  scheduleTerminationCheck()
   def game(state: GameState): Receive = {
     case ClientConnected =>
       def reply[T: Encoder](msg: T): Unit = send(sender())(msg)
@@ -39,6 +45,9 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       state.winner.foreach(winner => reply(Winner(winner)))
     case ClientDisconnected =>
       context.become(game(state.copy(clients = state.clients - sender())))
+      if (state.clients.isEmpty) scheduleTerminationCheck()
+    case TerminateIfUnconnected =>
+      if (state.clients.isEmpty) context.stop(self)
     case message @ As(ClientMove(id, x, y)) =>
       def broadcast[T: Encoder](msg: T): Unit = state.clients.foreach(send(_)(msg))
       val to = XY(x,y)
