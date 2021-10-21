@@ -25,12 +25,13 @@ object GameActor {
   private case class GameState(board: Board, clients: Set[ActorRef] = Set(), winner: Option[String] = None)
 }
 class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long, freeze: Long) extends Actor with ActorLogging {
-  override def preStart(): Unit = log.info(s"'$name' Started")
-  override def postStop(): Unit = log.debug(s"'$name' Stopped")
+  override def preStart(): Unit = log.info(s"Started game '$name'")
+  override def postStop(): Unit = log.debug(s"Stopped game '$name'")
   override def receive: Receive = game(initialState)
   def scheduleTerminationCheck(): Unit = {
+    log.debug("Schedule termination check")
     import context.dispatcher
-    context.system.scheduler.scheduleOnce(Duration(1, TimeUnit.MINUTES), self, TerminateIfUnconnected)
+    context.system.scheduler.scheduleOnce(Duration(10, TimeUnit.SECONDS), self, TerminateIfUnconnected)
   }
   scheduleTerminationCheck()
   def game(state: GameState): Receive = {
@@ -44,9 +45,12 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       }
       state.winner.foreach(winner => reply(Winner(winner)))
     case ClientDisconnected =>
-      context.become(game(state.copy(clients = state.clients - sender())))
-      if (state.clients.isEmpty) scheduleTerminationCheck()
+      val clients = state.clients - sender
+      log.debug(s"Client disconnected, ${clients.size} clients connected")
+      context.become(game(state.copy(clients = clients)))
+      if (clients.isEmpty) scheduleTerminationCheck()
     case TerminateIfUnconnected =>
+      log.debug(s"Termination check: ${state.clients.size} clients connected")
       if (state.clients.isEmpty) context.stop(self)
     case message @ As(ClientMove(id, x, y)) =>
       def broadcast[T: Encoder](msg: T): Unit = state.clients.foreach(send(_)(msg))
