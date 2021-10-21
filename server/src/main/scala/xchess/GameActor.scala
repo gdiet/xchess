@@ -20,6 +20,7 @@ object GameActor {
   case object ClientConnected
   case object ClientDisconnected
   case object TerminateIfUnconnected
+  case class ExecutePlan(id: Int)
   case class FromClient(message: String)
 
   private case class GameState(board: Board, clients: Set[ActorRef] = Set(), winner: Option[String] = None)
@@ -52,7 +53,13 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     case TerminateIfUnconnected =>
       log.debug(s"Termination check: ${state.clients.size} clients connected")
       if (state.clients.isEmpty) context.stop(self)
-    case message @ As(ClientMove(id, x, y)) =>
+    case ExecutePlan(id) =>
+      state.board.map.find { case (_, piece) => piece.id == id } foreach { case (xy, gamePiece) =>
+        gamePiece.plan.foreach(plan => self ! ClientMove(id, plan.pxy.x, plan.pxy.y))
+      }
+    case As(clientMove) =>
+      self ! clientMove
+    case ClientMove(id, x, y) =>
       def broadcast[T: Encoder](msg: T): Unit = state.clients.foreach(send(_)(msg))
       val to = XY(x,y)
       import state.board
@@ -68,7 +75,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
           val newPiece = gamePiece.copy(plan = newPlan)
           context.become(game(state.copy(board = board.copy(map = map + (xy -> newPiece)))))
           import context.dispatcher
-          context.system.scheduler.scheduleOnce(Duration(frozen, TimeUnit.MILLISECONDS), self, message)
+          context.system.scheduler.scheduleOnce(Duration(frozen, TimeUnit.MILLISECONDS), self, ExecutePlan(id))
         } else {
           // Execute move
           // Remove any plan for the piece
