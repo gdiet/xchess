@@ -17,7 +17,7 @@ COPY server/src src
 RUN sbt collectJars
 
 ### PRODUCTION IMAGE
-FROM openjdk:11.0.9.1-jre-slim AS prod
+FROM openjdk:17.0.1-slim-bullseye AS prod
 
 # Server install location, workdir for entrypoint
 WORKDIR /opt/xchess/server
