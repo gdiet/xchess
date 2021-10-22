@@ -144,12 +144,13 @@ function addMove(xt, xc, from, to) {
 }
 
 function cmdWinner(xt, xc, msg) {
-  // FIXME only add the winner marker to one side :)
-  console.log(`winner: ${msg.winner}`)
   const gold = new PIXI.Graphics()
   gold.lineStyle(xc.size/20, 0xf0c050)
-  gold.drawRect(xc.size/40, xc.size/40, (xc.x - 1/20)* xc.size, xc.size*19/20)
-  gold.drawRect(xc.size/40, (xc.y - 39/40)* xc.size, (xc.x - 1/20)* xc.size, xc.size*19/20)
+  if (msg.winner == xc.color) {
+    gold.drawRect(xc.size/40, (xc.y - 39/40)* xc.size, (xc.x - 1/20)* xc.size, xc.size*19/20)
+  } else {
+    gold.drawRect(xc.size/40, xc.size/40, (xc.x - 1/20)* xc.size, xc.size*19/20)
+  }
   gold.z = 1
   xt.app.stage.addChild(gold)
 }
