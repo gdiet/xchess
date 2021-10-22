@@ -46,7 +46,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       }
       state.winner.foreach(winner => reply(Winner(winner)))
     case ClientDisconnected =>
-      val clients = state.clients - sender
+      val clients = state.clients - sender()
       log.debug(s"Client disconnected, ${clients.size} clients connected")
       context.become(game(state.copy(clients = clients)))
       if (clients.isEmpty) scheduleTerminationCheck()
