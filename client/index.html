@@ -5,6 +5,12 @@
   <title>xChess</title>
   <link rel="icon" type="image/png" href="/img/white/King.png"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { max-width: 50em; margin-left: auto; margin-right: auto }
+    p { font-size: 24px }
+    button, input { font-size: 16px }
+  </style>
 </head>
 <body style="background-color: lightgray;">
   <script type="text/javascript">
@@ -17,15 +23,15 @@
       location.href = `/game.html?name=${name()}&color=${color}`
     }
   </script>
-
-  <p><i>xChess is a multiplayer game. Invite your friends to join you.<br>
-        To play together, participants need to use the same game name.</i></p>
-  <p><input  id="name"   type="text"   value="game" /> Game name</p>
+  <p>
+    xChess is a multiplayer game. Invite your friends to join you. To play together, participants need to use the same game name.
+  </p>
+  <p><input  id="name"   type="text"   value="game"/> Game name</p>
   <p><button type="button" onclick="joinGame('white')">Join Game (White)</button>
      <button type="button" onclick="joinGame('black')">Join Game (Black)</button></p>
-  <p><i>If you are the first to join the game, the game will be created with the settings below:</i></p>
-  <p><input  id="type"   type="text"   required value="chess" pattern="chess|large"/> Game type (one of 'chess', 'large')</p>
-  <p><input  id="init"   type="number" required value="30"/> Seconds to wait before game starts</p>
-  <p><input  id="freeze" type="number" required value="20"/> Seconds pieces freeze after moving</p>
+  <p>If you are the first to join the game, the game will be created with the settings below:</p>
+  <p><input  id="type"   type="text"   value="chess" pattern="chess|large"/> Game type (one of 'chess', 'large')</p>
+  <p><input  id="init"   type="number" value="30"/> Seconds to wait before game starts</p>
+  <p><input  id="freeze" type="number" value="20"/> Seconds pieces freeze after moving</p>
 </body>
 </html>
