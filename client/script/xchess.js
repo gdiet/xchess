@@ -176,6 +176,13 @@ function cmdMove(xt, xc, msg) {
         entry.sprite.x = msg.x * xc.size
         entry.sprite.y = xc.Y(msg.y) * xc.size
         xt.app.ticker.remove(move)
+        if (entry.piece == "Pawn" && (msg.y == 0 || msg.y == xc.y - 1)) {
+          entry.piece = "Queen"
+          xt.app.stage.removeChild(entry.sprite)
+          const sprite = addSprite(xt, xc, entry.color, "Queen", msg.x, msg.y)
+          entry.sprite = sprite
+          console.log(`Promoted ${entry.color} pawn to queen.`)
+        }
       }
     }
     xt.app.ticker.add(move)

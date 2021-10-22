@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 import xchess.GameActor._
-import xchess.logic.{Board, King, Pawn, Plan, XY}
+import xchess.logic.{Board, King, Pawn, Plan, Queen, XY}
 
 import java.lang.System.{currentTimeMillis => now}
 import java.util.concurrent.TimeUnit
@@ -104,7 +104,11 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
             val newWinner = state.winner.orElse(
               if (map.get(to).exists(_.piece == King)) { broadcast(Winner(gamePiece.color)); Some(gamePiece.color) } else None
             )
-            val newPiece = gamePiece.copy(plan = None, since = now)
+            val newPiece =
+              if (gamePiece.piece == Pawn && (y == 0 || y == board.size.y - 1))
+                gamePiece.copy(plan = None, since = now, piece = Queen)
+              else
+                gamePiece.copy(plan = None, since = now)
             val newMap = map - xy + (to -> newPiece)
             broadcast(Move(newPiece.id, x, y, freeze(newPiece.since)))
             context.become(game(state.copy(winner = newWinner, board = board.copy(map = newMap))))
