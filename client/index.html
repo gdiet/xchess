@@ -7,12 +7,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { max-width: 50em; margin-left: auto; margin-right: auto }
+    body { background-color: lightgray; max-width: 50em; margin-left: auto; margin-right: auto }
     p { font-size: 24px }
-    button, input { font-size: 16px }
+    button, input { font-size: 20px }
   </style>
 </head>
-<body style="background-color: lightgray;">
+<body>
   <script type="text/javascript">
     function get(id) { return document.getElementById(id).value }
     function name() { return encodeURI(get('name')) }
@@ -24,7 +24,7 @@
     }
   </script>
   <p>
-    xChess is a multiplayer game. Invite your friends to join you. To play together, participants need to use the same game name.
+    xChess (extreme chess) is a multiplayer game. To play together, join your friends by using the same game name. It is possible for two or more players to coordinate and play together on the same side. Have fun!
   </p>
   <p><input  id="name"   type="text"   value="game"/> Game name</p>
   <p><button type="button" onclick="joinGame('white')">Join Game (White)</button>
@@ -33,5 +33,19 @@
   <p><input  id="type"   type="text"   value="chess" pattern="chess|large"/> Game type (one of 'chess', 'large')</p>
   <p><input  id="init"   type="number" value="30"/> Seconds to wait before game starts</p>
   <p><input  id="freeze" type="number" value="20"/> Seconds pieces freeze after moving</p>
+  <p>----------------------</p>
+  <p>
+    Other than in classic chess:<br>
+    * There is no turn order, just draw your pieces.<br>
+    * When you draw a piece, it will 'freeze' for some time.<br>
+    * Whoever captures the opponent king first wins.<br>
+    * On the large board, pawns never move two fields.<br>
+    And a few other details, just play and you will see.
+  </p>
+  <p>
+    (c) 2021 Georg<br>
+    MIT License<br>
+    <a href="https://github.com/gdiet/xchess">https://github.com/gdiet/xchess</a> 
+  </p>
 </body>
 </html>
