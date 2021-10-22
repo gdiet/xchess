@@ -97,6 +97,7 @@ function receiveCommand(xt, xc) { return (event) => {
   const msg = JSON.parse(event.data)
   console.debug(JSON.stringify(msg))
   switch (msg.cmd) {
+    case "winner": cmdWinner(xt, xc, msg); break
     case "add"   : cmdAdd   (xt, xc, msg); break
     case "move"  : cmdMove  (xt, xc, msg); break
     case "remove": cmdRemove(xt, xc, msg); break
@@ -140,6 +141,17 @@ function addMove(xt, xc, from, to) {
   arrow.rotation = Math.atan2(xc.Y(from.y) - xc.Y(to.y), from.x - to.x)
   xt.app.stage.addChild(arrow)
   return arrow
+}
+
+function cmdWinner(xt, xc, msg) {
+  // FIXME only add the winner marker to one side :)
+  console.log(`winner: ${msg.winner}`)
+  const gold = new PIXI.Graphics()
+  gold.lineStyle(xc.size/20, 0xf0c050)
+  gold.drawRect(xc.size/40, xc.size/40, (xc.x - 1/20)* xc.size, xc.size*19/20)
+  gold.drawRect(xc.size/40, (xc.y - 39/40)* xc.size, (xc.x - 1/20)* xc.size, xc.size*19/20)
+  gold.z = 1
+  xt.app.stage.addChild(gold)
 }
 
 function cmdAdd(xt, xc, msg) {
