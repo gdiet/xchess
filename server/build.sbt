@@ -1,14 +1,14 @@
 name := "xchess"
 version := "current"
 
-ThisBuild / scalaVersion := "2.13.6"
-ThisBuild / scalacOptions ++= Seq(
+scalaVersion := "2.13.6"
+scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
 )
 
-val AkkaVersion = "2.6.17"
+val AkkaVersion     = "2.6.17"
 val AkkaHttpVersion = "10.2.6"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
