@@ -17,7 +17,7 @@
     function get(id) { return document.getElementById(id).value }
     function name() { return encodeURI(get('name')) }
     async function joinGame(color) {
-      const body = JSON.stringify({name:name(), gameType:get('type'), initialFreeze:get('init'), freeze:get('freeze') })
+      const body = JSON.stringify({name:name(), gameType:get('type'), initialFreezeSeconds:get('init'), freezeSeconds:get('freeze') })
       const response = await fetch('/games', { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
       console.debug(`Response from attempt to create game: ${response.statusText}`)
       location.href = `/game.html?name=${name()}&color=${color}`

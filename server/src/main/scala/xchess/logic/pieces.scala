@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 case class Plan(pxy: XY, pid: Int = Plan.current.incrementAndGet() )
 object Plan { private val current = new AtomicInteger() }
 
-case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long, plan: Option[Plan]) {
+case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, frozenUntil: Long, plan: Option[Plan]) {
   def color: String = if (isWhite) "white" else "black"
   def name: String = piece.name
   def moves(xy: XY)(implicit board: XY): Seq[Seq[XY]] = {
@@ -21,8 +21,8 @@ case class GamePiece(id: Int, piece: Piece, isWhite: Boolean, since: Long, plan:
 object GamePiece {
   private val allPieces = Seq(King, Queen, Bishop, Knight, Rook, Pawn)
   private val piecesMap = allPieces.map(p => p.letter -> p).toMap
-  def unapply(id: Int, letter: Char, since: Long): Option[GamePiece] =
-    piecesMap.get(letter.toUpper).map(GamePiece(id, _, letter.isUpper, since, None))
+  def unapply(id: Int, letter: Char, frozenUntil: Long): Option[GamePiece] =
+    piecesMap.get(letter.toUpper).map(GamePiece(id, _, letter.isUpper, frozenUntil, None))
 }
 
 sealed trait Piece {

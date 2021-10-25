@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 import xchess.GameActor._
-import xchess.logic.{Board, King, Pawn, Plan, Queen, XY}
+import xchess.logic.{Board, GamePiece, King, Pawn, Plan, Queen, XY}
 
 import java.lang.System.{currentTimeMillis => now}
 import java.util.concurrent.TimeUnit
@@ -15,17 +15,18 @@ import scala.util.chaining.scalaUtilChainingOps
 
 object GameActor {
   def apply(name: String, gameType: String, initialFreeze: Long, freeze: Long): Either[StatusCode, Props] =
-    Right(Props(new GameActor(name, GameState(Board(gameType)), now + initialFreeze * 1000, freeze * 1000)))
+    Right(Props(new GameActor(name, GameState(Board(gameType, initialFreeze)), freeze)))
 
   case object ClientConnected
   case object ClientDisconnected
   case object TerminateIfUnconnected
-  case class ExecutePlan(id: Int)
-  case class FromClient(message: String)
+  case class  ExecutePlan(id: Int)
+  case class  FromClient(message: String)
 
   private case class GameState(board: Board, clients: Set[ActorRef] = Set(), winner: Option[String] = None)
 }
-class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long, freeze: Long) extends Actor with ActorLogging {
+// FIXME make revealFreeze available in POST and on index page
+class GameActor(name: String, initialState: GameState, freeze: Long, revealFreeze: Boolean = true) extends Actor with ActorLogging {
   override def preStart(): Unit = log.info(s"Started game '$name'")
   override def postStop(): Unit = log.debug(s"Stopped game '$name'")
   override def receive: Receive = game(initialState)
@@ -35,13 +36,15 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     context.system.scheduler.scheduleOnce(Duration(10, TimeUnit.SECONDS), self, TerminateIfUnconnected)
   }
   scheduleTerminationCheck()
+  def freezeResponse(piece: GamePiece): Option[Long] =
+    if (revealFreeze && piece.frozenUntil > now) Some(piece.frozenUntil - now) else None
   def game(state: GameState): Receive = {
     case ClientConnected =>
       def reply[T: Encoder](msg: T): Unit = send(sender())(msg)
       context.become(game(state.copy(clients = state.clients + sender())))
       reply(state.board.size)
       state.board.map.foreach { case xy -> piece =>
-        reply(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freeze(piece.since)))
+        reply(Add(piece.id, xy.x, xy.y, piece.color, piece.name, freezeResponse(piece)))
         piece.plan.foreach { plan => reply(ClientPlan(plan.pid, piece.color, xy, plan.pxy)) }
       }
       state.winner.foreach(winner => reply(Winner(winner)))
@@ -65,7 +68,7 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
       import state.board
       import board.map
       map.find { case (_, piece) => piece.id == id } foreach { case (xy, gamePiece) =>
-        val frozen = frozenFor(gamePiece.since)
+        val frozen = gamePiece.frozenUntil - now
         if (frozen > 0) {
           // Plan move
           gamePiece.plan.foreach { plan => broadcast(Unplan(plan.pid, moved = false)) }
@@ -106,11 +109,11 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
             )
             val newPiece =
               if (gamePiece.piece == Pawn && (y == 0 || y == board.size.y - 1))
-                gamePiece.copy(plan = None, since = now, piece = Queen)
+                gamePiece.copy(plan = None, frozenUntil = now + freeze, piece = Queen)
               else
-                gamePiece.copy(plan = None, since = now)
+                gamePiece.copy(plan = None, frozenUntil = now + freeze)
             val newMap = map - xy + (to -> newPiece)
-            broadcast(Move(newPiece.id, x, y, freeze(newPiece.since)))
+            broadcast(Move(newPiece.id, x, y, freezeResponse(newPiece)))
             context.become(game(state.copy(winner = newWinner, board = board.copy(map = newMap))))
           }
         }
@@ -118,7 +121,5 @@ class GameActor(name: String, initialState: GameState, initialFreezeUntil: Long,
     case m =>
       log.info(s"received $m")
   }
-  def send[T: Encoder](to: ActorRef)(msg: T): Unit = to ! WSHandler.ForWS(msg.asJson.noSpaces)
-  def freeze(since: Long): Long = math.max(math.max(0, initialFreezeUntil - now), since + freeze - now)
-  def frozenFor(since: Long): Long = math.max(0L, math.max(initialFreezeUntil, since + freeze) - now)
+  def send[T: Encoder](to: ActorRef)(msg: T): Unit = to ! WSHandler.ForWS(msg.asJson.dropNullValues.noSpaces)
 }

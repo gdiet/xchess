@@ -26,8 +26,8 @@ object Board {
                        |rhbqkbhr""".stripMargin
   }
 
-  def apply(layout: String): Board = {
-    val time = System.currentTimeMillis()
+  def apply(layout: String, initialFreeze: Long): Board = {
+    val frozenUntil = System.currentTimeMillis() + initialFreeze
     val lines = get(layout).linesIterator.toSeq
     require(lines.nonEmpty && lines.map(_.length).distinct.size == 1)
     val positions = for {
@@ -36,7 +36,7 @@ object Board {
     } yield XY(x, y) -> letter
     val pieces = for {
       ((xy, letter), id) <- positions.zipWithIndex
-      piece <- GamePiece.unapply(id, letter, time)
+      piece <- GamePiece.unapply(id, letter, frozenUntil)
     } yield xy -> piece
     Board(XY(lines.head.length, lines.size), pieces.size, pieces.toMap)
   }
