@@ -167,11 +167,11 @@ function cmdMove(xt, xc, msg) {
     let ticks = 20
     const dx = (msg.x - entry.x) * xc.size / ticks
     const dy = (xc.Y(msg.y) - xc.Y(entry.y)) * xc.size / ticks
-    function move(delta) {
+    function move() {
       ticks = ticks - 1
       if (ticks > 0) {
-        entry.sprite.x = entry.sprite.x + delta * dx
-        entry.sprite.y = entry.sprite.y + delta * dy
+        entry.sprite.x = entry.sprite.x + dx
+        entry.sprite.y = entry.sprite.y + dy
       } else {
         entry.sprite.x = msg.x * xc.size
         entry.sprite.y = xc.Y(msg.y) * xc.size
