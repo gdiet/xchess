@@ -5,7 +5,7 @@ import io.circe.parser._
 import io.circe.generic.auto._
 import xchess.logic.XY
 
-case class PostGameBody(name: String, gameType: String, initialFreezeSeconds: Int, freezeSeconds: Int)
+case class PostGameBody(name: String, gameType: String, initialFreezeSeconds: Int, freezeSeconds: Int, revealFreeze: Boolean)
 
 case class Add(id: Int, x: Int, y: Int, color: String, piece: String, freeze: Option[Long], cmd: String = "add")
 case class Move(id: Int, x: Int, y: Int, freeze: Option[Long], cmd: String = "move")

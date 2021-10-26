@@ -14,8 +14,8 @@ import scala.concurrent.duration.Duration
 import scala.util.chaining.scalaUtilChainingOps
 
 object GameActor {
-  def apply(name: String, gameType: String, initialFreeze: Long, freeze: Long): Either[StatusCode, Props] =
-    Right(Props(new GameActor(name, GameState(Board(gameType, initialFreeze)), freeze)))
+  def apply(name: String, gameType: String, initialFreeze: Long, freeze: Long, revealFreeze: Boolean): Either[StatusCode, Props] =
+    Right(Props(new GameActor(name, GameState(Board(gameType, initialFreeze)), freeze, revealFreeze)))
 
   case object ClientConnected
   case object ClientDisconnected
@@ -25,8 +25,7 @@ object GameActor {
 
   private case class GameState(board: Board, clients: Set[ActorRef] = Set(), winner: Option[String] = None)
 }
-// FIXME make revealFreeze available in POST and on index page
-class GameActor(name: String, initialState: GameState, freeze: Long, revealFreeze: Boolean = true) extends Actor with ActorLogging {
+class GameActor(name: String, initialState: GameState, freeze: Long, revealFreeze: Boolean) extends Actor with ActorLogging {
   override def preStart(): Unit = log.info(s"Started game '$name'")
   override def postStop(): Unit = log.debug(s"Stopped game '$name'")
   override def receive: Receive = game(initialState)

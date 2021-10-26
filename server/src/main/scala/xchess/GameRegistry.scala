@@ -12,9 +12,9 @@ class GameRegistry extends Actor with ActorLogging {
   override def receive: Receive = withGames(Map())
   def withGames(games: Map[String, ActorRef]): Receive = {
 
-    case PostGameBody(name, gameType, initialFreezeSeconds, freezeSeconds) =>
+    case p @ PostGameBody(name, gameType, initialFreezeSeconds, freezeSeconds, revealFreeze) =>
       if (games.contains(name)) sender() ! StatusCodes.CONFLICT
-      else GameActor(name, gameType, initialFreezeSeconds * 1000, freezeSeconds * 1000) match {
+      else GameActor(name, gameType, initialFreezeSeconds * 1000, freezeSeconds * 1000, revealFreeze) match {
         case Left(statusCode) => sender() ! statusCode
         case Right(props) =>
           val gameActor = context.actorOf(props)
