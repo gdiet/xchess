@@ -8,6 +8,7 @@ function loadTextures() {
       loader.add(`${color}${piece}`, `/img/${color}/${piece}.png`)
     )
   )
+  loader.add(`ice`,`/img/snowflake.png`)
   loader.onError.add(e => console.error(`Error ${e}.`))
   loader.load((_, resources) => {
     console.log(`Piece images loaded.`)
@@ -118,6 +119,36 @@ function addSprite(xt, xc, color, piece, x, y) {
   return sprite
 }
 
+function addSpriteWithIce(xt, xc, color, piece, x, y)  {
+  const sprite = addSprite(xt, xc, color, piece, x, y)
+  const ice = new PIXI.Sprite(xt.res[`ice`].texture)
+  ice.width  = 0
+  ice.height = 0
+  sprite.addChild(ice)
+  sprite.iceSprite = ice
+  return sprite
+}
+
+function showIce(xt, sprite, freeze) {
+  const freezeEnd = Date.now() + freeze
+  const ice = sprite.iceSprite
+  function melt() {
+    const remaining = freezeEnd - Date.now()
+    if (remaining <= 0) {
+      ice.width  = 0
+      ice.height = 0
+      xt.app.ticker.remove(melt)
+    } else {
+      const shrinkTo = (remaining / freeze) ** 0.5 * 0.7
+      ice.x      = 125 * (1 - shrinkTo)
+      ice.y      = 125 * (1 - shrinkTo)
+      ice.width  = 250 * shrinkTo
+      ice.height = 250 * shrinkTo
+    }
+  }
+  xt.app.ticker.add(melt)
+}
+
 /*  If we want to keep the moves on top, do something along the lines of
     https://github.com/pixijs/pixi.js/issues/296:
 
@@ -157,7 +188,8 @@ function cmdWinner(xt, xc, msg) {
 
 function cmdAdd(xt, xc, msg) {
   xc.setId(msg.x, msg.y, msg.id)
-  const sprite = addSprite(xt, xc, msg.color, msg.piece, msg.x, msg.y)
+  const sprite = addSpriteWithIce(xt, xc, msg.color, msg.piece, msg.x, msg.y)
+  if (msg.freeze || 0 > 500) showIce(xt, sprite, msg.freeze)
   xc.pieces.set(msg.id,{sprite:sprite, color:msg.color, piece:msg.piece, x:msg.x, y:msg.y})
 }
 
@@ -179,10 +211,11 @@ function cmdMove(xt, xc, msg) {
         if (entry.piece == "Pawn" && (msg.y == 0 || msg.y == xc.y - 1)) {
           entry.piece = "Queen"
           xt.app.stage.removeChild(entry.sprite)
-          const sprite = addSprite(xt, xc, entry.color, "Queen", msg.x, msg.y)
+          const sprite = addSpriteWithIce(xt, xc, entry.color, "Queen", msg.x, msg.y)
           entry.sprite = sprite
           console.log(`Promoted ${entry.color} pawn to queen.`)
         }
+        if (msg.freeze || 0 > 500) showIce(xt, entry.sprite, msg.freeze)
       }
     }
     xt.app.ticker.add(move)
