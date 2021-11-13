@@ -29,7 +29,7 @@ function setup(xt) {
   console.log(`Setup OK for ${xc.white ? 'white':'black'}.`)
   xt.ws = new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`)
   xt.ws.onopen  = _ => console.log(`Websocket opened.`)
-  xt.ws.onerror = _ => console.log(`Websocket error.`)
+  xt.ws.onerror = _ => { console.log(`Websocket error.`); location.href = "/" }
   xt.ws.onclose = _ => console.log(`Websocket closed.`)
   xt.ws.onmessage = receiveBoardLayout(xt, xc)
 }
@@ -83,8 +83,9 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xc.dragStart = dragStart(xt, xc)
   xc.dragMove  = _ => _
   xc.dragEnd   = _ => _
-  // Initialize command handling
+  // Initialize command handling. On WS error just log, don't go back to the index page.
   xt.ws.onmessage = receiveCommand(xt, xc)
+  xt.ws.onerror   = _ => console.log(`Websocket error.`)
   // Set up interaction with the chess board
   xt.app.stage.interactive = true
   xt.app.stage
