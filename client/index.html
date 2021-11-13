@@ -9,7 +9,7 @@
   <style>
     body { background-color: lightgray; max-width: 50em; margin-left: auto; margin-right: auto }
     p { font-size: 24px }
-    button, input { font-size: 20px }
+    button, input, select { font-size: 20px }
   </style>
 </head>
 <body>
@@ -34,7 +34,7 @@
   <p><button type="button" onclick="joinGame('white')">Join Game (White)</button>
      <button type="button" onclick="joinGame('black')">Join Game (Black)</button></p>
   <p>If you are the first to join the game, the game will be created with the settings below:</p>
-  <p><input  id="type"   type="text"     value="chess" pattern="chess|large"/> <label for="type">Game type (one of 'chess', 'large')</label></p>
+  <p><select id="type"><option>chess</option><option>large</option></select> <label for="type">Game type (one of 'chess', 'large')</label></p>
   <p><input  id="init"   type="number"   value="30"/> <label for="init">Seconds to wait before game starts</label></p>
   <p><input  id="freeze" type="number"   value="20"/> <label for="freeze">Seconds pieces freeze after moving</label></p>
   <p><input  id="reveal" type="checkbox" checked=true value="true" /> <label for="reveal">Show freeze indicators</label></p>
