@@ -20,6 +20,13 @@ RUN sbt update
 COPY server/src src
 RUN sbt collectJars
 
+### LIST BUILD CONTEXT
+FROM busybox AS buildcontext
+
+RUN mkdir /tmp/build/
+COPY . /tmp/build/
+RUN find /tmp/build
+
 ### PRODUCTION IMAGE
 FROM openjdk:17.0.2-slim AS prod
 
@@ -36,10 +43,3 @@ COPY client ../client
 RUN useradd -lMs /bin/bash docker
 USER docker
 CMD [ "java", "-cp", "lib/*", "-Xmx64M", "-XX:+ExitOnOutOfMemoryError", "xchess.Main" ]
-
-### LIST BUILD CONTEXT
-FROM busybox
-
-RUN mkdir /tmp/build/
-COPY . /tmp/build/
-RUN find /tmp/build
