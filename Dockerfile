@@ -1,3 +1,7 @@
+### Local linux/docker usage
+# docker build --rm -t xchess .
+# docker run --rm -it --name xchess -p 8080:8080 xchess
+
 ### BUILD
 FROM hseeberger/scala-sbt:eclipse-temurin-17.0.2_1.6.2_2.13.8 AS build
 
