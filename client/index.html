@@ -56,5 +56,9 @@
     MIT License<br>
     <a href="https://github.com/gdiet/xchess">https://github.com/gdiet/xchess</a> 
   </p>
+  <script type="text/javascript">
+    const gameName = new URLSearchParams(window.location.search).get("name") ?? "game"
+    document.getElementById("name").value = gameName
+  </script>
 </body>
 </html>

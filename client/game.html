@@ -17,7 +17,7 @@
   <script type="module" src="script/xchess.js"></script>
   <p>xChess (c) Georg --- <a href="./index.html" id="backLink">Back to settings ...</a></p>
   <script type='text/javascript'>
-    const name = new URLSearchParams(window.location.search).get("name" )??"game";
+    const name = new URLSearchParams(window.location.search).get("name") ?? "game"
     document.getElementById("backLink").href=`./index.html?name=${name}`
   </script>
 </body>
