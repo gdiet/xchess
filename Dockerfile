@@ -23,9 +23,9 @@ RUN sbt collectJars
 ### LIST BUILD CONTEXT
 FROM busybox AS buildcontext
 
-RUN mkdir /tmp/build/
-COPY . /tmp/build/
-RUN find /tmp/build
+RUN mkdir /context/
+COPY . /context/
+RUN find /context
 
 ### PRODUCTION IMAGE
 FROM openjdk:17.0.2-slim AS prod
