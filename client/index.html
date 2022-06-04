@@ -22,7 +22,7 @@
       const response = await fetch('/games', { method: 'POST', body: body, headers: {'Content-Type':'application/json'} })
       console.debug(`Response from attempt to create game: ${response.statusText}`)
       if (response.statusText === "Created" || response.statusText === "Conflict")
-        location.href = `/game.html?name=${name()}&color=${color}`
+        location.href = `./game.html?name=${name()}&color=${color}`
       else
         alert(`POST game unexpectedly returned ${response.statusText}`)
     }
