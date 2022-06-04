@@ -1,5 +1,5 @@
 ### BUILD
-FROM hseeberger/scala-sbt:17.0.0_1.5.5_2.13.6 AS build
+FROM hseeberger/scala-sbt:eclipse-temurin-17.0.2_1.6.2_2.13.8 AS build
 
 # /root is the standard dir of the hseeberger/scala-sbt images
 WORKDIR /root
@@ -17,7 +17,7 @@ COPY server/src src
 RUN sbt collectJars
 
 ### PRODUCTION IMAGE
-FROM openjdk:17.0.1-slim-bullseye AS prod
+FROM openjdk:17.0.2-slim AS prod
 
 # Server install location, workdir for entrypoint
 WORKDIR /opt/xchess/server
