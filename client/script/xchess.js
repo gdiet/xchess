@@ -49,7 +49,7 @@ function receiveBoardLayout(xt, xc) { return (event) => {
   xc.y = msg.y
   console.log(`Board layout ${xc.x} x ${xc.y}.`)
   const maxx = window.innerWidth - 30
-  const maxy = window.innerHeight - 30
+  const maxy = window.innerHeight - 60
   if (msg.x/msg.y > maxx/maxy) { xc.size = maxx/msg.x } else { xc.size = maxy/msg.y }
   // Create the Pixi Application for the chess board
   xt.app = new PIXI.Application({width: xc.x*xc.size, height: xc.y*xc.size})
