@@ -8,16 +8,16 @@ scalacOptions ++= Seq(
   "-unchecked",
 )
 
-val AkkaVersion     = "2.6.17"
-val AkkaHttpVersion = "10.2.6"
+val AkkaVersion     = "2.6.19"
+val AkkaHttpVersion = "10.2.9"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-stream"      % AkkaVersion,
   "com.typesafe.akka" %% "akka-http"        % AkkaHttpVersion,
-  "de.heikoseeberger" %% "akka-http-circe"  % "1.38.2",
-  "io.circe"          %% "circe-generic"    % "0.14.1",
-  "io.circe"          %% "circe-parser"     % "0.14.1",
-  "ch.qos.logback"    %  "logback-classic"  % "1.2.6"
+  "de.heikoseeberger" %% "akka-http-circe"  % "1.39.2",
+  "io.circe"          %% "circe-generic"    % "0.14.2",
+  "io.circe"          %% "circe-parser"     % "0.14.2",
+  "ch.qos.logback"    %  "logback-classic"  % "1.2.11"
 )
 
 lazy val collectJars = taskKey[Unit]("Collects deployment JARs.")
