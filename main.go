@@ -18,37 +18,66 @@ func generateClientID() string {
 	return fmt.Sprintf("%06d", id)
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+func writeText(conn *websocket.Conn, clientID, message string) error {
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
 	if err != nil {
-		log.Println("Upgrade error:", err)
-		return
+		log.Printf("Write error (%s): %v", clientID, err)
 	}
-	defer conn.Close()
+	return err
+}
 
-	clientID := generateClientID()
-	log.Printf("Client %s connected.", clientID)
+func wsHandler(stateChan chan StateMessage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	for {
-		messageType, message, err := conn.ReadMessage()
+		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("Client", clientID, "read error:", err)
-			break
+			log.Println("Upgrade error:", err)
+			return
+		}
+		defer conn.Close()
+
+		clientID := generateClientID()
+		log.Printf("Client %s connected.", clientID)
+
+		for {
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("Client", clientID, "read error:", err)
+				break
+			}
+
+			if messageType != websocket.TextMessage {
+				log.Println("Client", clientID, "sent message type", messageType, "- no operation.")
+				break
+			}
+
+			command := string(message)
+			log.Printf("Client %s sent: %s", clientID, command)
+
+			if command == "get" {
+				respChan := make(chan string)
+				stateChan <- StateMessage{Type: "get", Resp: respChan}
+				current := <-respChan
+				if writeText(conn, clientID, "Current state: "+current) != nil {
+					break
+				}
+			} else {
+				stateChan <- StateMessage{Type: "set", Data: command}
+				if writeText(conn, clientID, "Updated state to: "+command) != nil {
+					break
+				}
+			}
 		}
 
-		log.Printf("Client %s received: %s", clientID, message)
-
-		if err := conn.WriteMessage(messageType, message); err != nil {
-			log.Println("Client", clientID, "write error:", err)
-			break
-		}
+		log.Printf("Client %s disconnected.", clientID)
 	}
-
-	log.Printf("Client %s disconnected.", clientID)
 }
 
 func main() {
-	http.HandleFunc("/ws", wsHandler)
+	stateChan := make(chan StateMessage)
+	go StateManager(stateChan)
+
+	http.HandleFunc("/ws", wsHandler(stateChan))
 	fmt.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
