@@ -78,6 +78,7 @@ func main() {
 	go StateManager(stateChan)
 
 	http.HandleFunc("/ws", wsHandler(stateChan))
+	http.Handle("/", http.FileServer(http.Dir("./web")))
 	fmt.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
