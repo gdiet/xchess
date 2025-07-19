@@ -7,7 +7,7 @@
 <pre id="output"></pre>
 
 <script>
-  const ws = new WebSocket("ws://localhost:8080/ws");
+  const ws = new WebSocket(`ws://${window.location.host}/ws`);
 
   ws.onmessage = (event) => {
     document.getElementById("output").textContent += "Received: " + event.data + "\n";
