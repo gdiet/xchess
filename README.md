@@ -40,8 +40,8 @@ Server messages broadcast to all clients:
 2. **Add Go bin to your PATH** (optional but recommended):
 
    ```bash
-   echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
-   source ~/.bashrc
+   echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.profile
+   source ~/.profile
    ```
 
 3. **Run the application with live reloading**:
