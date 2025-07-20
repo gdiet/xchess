@@ -2,6 +2,26 @@
 
 A fast paced bad ass chess game.
 
+## REST API
+
+`POST /api/games`
+
+Body:
+```json
+{
+   boardLayout: "standard",
+   freezeTimeMillis: 10000
+}
+```
+
+Response:
+```json
+{
+   gameId: "002572"
+}
+```
+
+
 ## Websocket Communication
 
 The game uses WebSocket for real-time communication between clients and the server. Messages are sent as JSON objects. When the connection is created, the server sends the current game state to the client. Later, the server sends updates to the game state as they occur. Clients send commands to the server. No acknowledgement is sent for commands.
