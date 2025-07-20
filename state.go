@@ -1,20 +1,26 @@
 package main
 
-type StateMessage struct {
-	Type string      // "get" or "set"
-	Data string      // For "set", this is the new value
-	Resp chan string // Response channel for "get"
+type CommandMessage struct {
+	Type string        // "get" or "chat"
+	Data string        // For "chat", this is the message to add
+	Resp chan []string // Response channel for "get"
 }
 
-func StateManager(input chan StateMessage) {
-	var state string
+func ChatManager(input chan CommandMessage) {
+	chat := []string{}
 
 	for msg := range input {
 		switch msg.Type {
 		case "get":
-			msg.Resp <- state
-		case "set":
-			state = msg.Data
+			msg.Resp <- chat
+		case "chat":
+			// Add new message to chat
+			chat = append(chat, msg.Data)
+			
+			// Keep only the last 20 messages
+			if len(chat) > 20 {
+				chat = chat[1:] // Remove the oldest message
+			}
 		}
 	}
 }

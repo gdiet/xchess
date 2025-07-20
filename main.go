@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -8,15 +9,6 @@ import (
 
 	"github.com/gorilla/websocket"
 )
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
-
-func generateClientID() string {
-	id := rand.Intn(1_000_000) // 0 to 999999
-	return fmt.Sprintf("%06d", id)
-}
 
 func writeText(conn *websocket.Conn, clientID, message string) error {
 	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
@@ -26,23 +18,24 @@ func writeText(conn *websocket.Conn, clientID, message string) error {
 	return err
 }
 
-func wsHandler(stateChan chan StateMessage) http.HandlerFunc {
+func wsHandler(commandChan chan CommandMessage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		conn, err := upgrader.Upgrade(w, r, nil)
+		clientID := fmt.Sprintf("%06d", rand.Intn(1_000_000)) // 000000 to 999999
+
+		ws, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("Upgrade error:", err)
+			log.Println("Client", clientID, "websocket upgrade error:", err)
 			return
 		}
-		defer conn.Close()
+		defer ws.Close()
 
-		clientID := generateClientID()
-		log.Printf("Client %s connected.", clientID)
+		log.Println("Client", clientID, "connected.")
 
 		for {
-			messageType, message, err := conn.ReadMessage()
+			messageType, message, err := ws.ReadMessage()
 			if err != nil {
-				log.Println("Client", clientID, "read error:", err)
+				log.Println("Client", clientID, "websocket read error:", err)
 				break
 			}
 
@@ -52,32 +45,43 @@ func wsHandler(stateChan chan StateMessage) http.HandlerFunc {
 			}
 
 			command := string(message)
-			log.Printf("Client %s sent: %s", clientID, command)
+			log.Println("Client", clientID, "sent:", command)
 
 			if command == "get" {
-				respChan := make(chan string)
-				stateChan <- StateMessage{Type: "get", Resp: respChan}
-				current := <-respChan
-				if writeText(conn, clientID, "Current state: "+current) != nil {
+				chatResponseChan := make(chan []string)
+				commandChan <- CommandMessage{Type: "get", Resp: chatResponseChan}
+				jsonBytes, err := json.Marshal(<-chatResponseChan)
+				if err != nil {
+					log.Println("Client", clientID, "JSON encoding error:", err)
 					break
 				}
+				err = writeText(ws, clientID, string(jsonBytes))
+				if err != nil {
+					log.Println("Client", clientID, "websocket write error:", err)
+					break
+				}
+				log.Println("Client", clientID, "response:", string(jsonBytes))
+
 			} else {
-				stateChan <- StateMessage{Type: "set", Data: command}
-				if writeText(conn, clientID, "Updated state to: "+command) != nil {
+				// Treat any non-"get" message as a chat message
+				commandChan <- CommandMessage{Type: "chat", Data: command}
+				err = writeText(ws, clientID, "Message added to chat")
+				if err != nil {
+					log.Println("Client", clientID, "websocket write error:", err)
 					break
 				}
 			}
 		}
 
-		log.Printf("Client %s disconnected.", clientID)
+		log.Println("Client", clientID, "disconnected.")
 	}
 }
 
 func main() {
-	stateChan := make(chan StateMessage)
-	go StateManager(stateChan)
+	chatChan := make(chan CommandMessage)
+	go ChatManager(chatChan)
 
-	http.HandleFunc("/ws", wsHandler(stateChan))
+	http.HandleFunc("/ws", wsHandler(chatChan))
 	http.Handle("/", http.FileServer(http.Dir("./web")))
 	fmt.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
