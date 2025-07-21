@@ -5,14 +5,9 @@ import (
 	"math/rand"
 )
 
-/*
-we need a function returning a channel for the games commands, which handles the commands to update the games registry (create & lookup). this channel is instantiated as singleton in the main.go file.
-*/
-
 func GamesRegistry() chan GamesRequest {
 	gamesChan := make(chan GamesRequest)
 	games := make(map[string]chan GameRequest)
-
 	go func() {
 		for request := range gamesChan {
 			request.Execute(games)
@@ -33,7 +28,7 @@ type CreateGameRequest struct {
 
 func (req CreateGameRequest) Execute(games map[string]chan GameRequest) {
 	if len(games) >= 10 {
-		req.ResponseChan <- CreateGameResponse{Error: fmt.Errorf("Too many games")}
+		req.ResponseChan <- CreateGameResponse{Error: fmt.Errorf("too many games")}
 		return
 	}
 	var gameID string
@@ -43,7 +38,7 @@ func (req CreateGameRequest) Execute(games map[string]chan GameRequest) {
 			break
 		}
 	}
-	games[gameID] = make(chan GameRequest)
+	games[gameID] = GameRegistry(req.BoardLayout, req.FreezeTimeMilliseconds)
 	req.ResponseChan <- CreateGameResponse{GameID: gameID}
 }
 
@@ -70,31 +65,3 @@ type LookupGameResponse struct {
 	Error    error // game not found
 }
 
-type GameCommand string
-
-const (
-	Subscribe GameCommand = "subscribe"
-	Chat      GameCommand = "chat"
-	Plan      GameCommand = "plan"
-	Pause     GameCommand = "pause"
-	Resume    GameCommand = "resume"
-)
-
-type GameRequest struct {
-	Command  GameCommand
-	BackChan chan GameUpdate
-}
-
-type GameTopic string
-const (
-	ChatTopic   GameTopic = "chat"
-	PlanTopic   GameTopic = "plan"
-	MoveTopic   GameTopic = "move"
-	PauseTopic  GameTopic = "pause"
-	ResumeTopic GameTopic = "resume"
-)
-
-type GameUpdate struct {
-	Topic GameTopic
-	Data  interface{}
-}
