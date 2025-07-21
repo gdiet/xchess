@@ -1,3 +1,12 @@
 {
-  "cSpell.words": ["github", "restapi", "Upgrader", "xchess"]
+  "cSpell.words": [
+    "github",
+    "GOPATH",
+    "gte",
+    "lte",
+    "oneof",
+    "restapi",
+    "Upgrader",
+    "xchess"
+  ]
 }

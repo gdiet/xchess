@@ -36,5 +36,6 @@ func HandleGamesRequests(w http.ResponseWriter, r *http.Request) {
 
 type PostGamesBody struct {
 	BoardLayout            string `json:"boardLayout" validate:"required,oneof=standard large"`
-	FreezeTimeMilliseconds int    `json:"freezeTimeMilliseconds" validate:"required,gte=0,lte=120000"`
+	// *int, because required does not allow zero values for int
+	FreezeTimeMilliseconds *int   `json:"freezeTimeMilliseconds" validate:"required,gte=0,lte=120000"`
 }

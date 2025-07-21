@@ -7,20 +7,21 @@ A fast paced bad ass chess game.
 `POST /api/games`
 
 Body:
+
 ```json
 {
-   boardLayout: "standard",
-   freezeTimeMillis: 10000
+  "boardLayout": "standard",
+  "freezeTimeMilliseconds": 10000
 }
 ```
 
 Response:
+
 ```json
 {
-   gameId: "002572"
+  "gameId": "002572"
 }
 ```
-
 
 ## Websocket Communication
 
