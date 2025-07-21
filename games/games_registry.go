@@ -48,9 +48,11 @@ const (
 )
 
 type GamesRequest struct {
-	Command      GamesCommand
-	GameID       string             // only for lookup command
-	ResponseChan chan GamesResponse
+	Command                GamesCommand
+	BoardLayout            string // only for create command
+	FreezeTimeMilliseconds int    // only for create command
+	GameID                 string // only for lookup command
+	ResponseChan           chan GamesResponse
 }
 
 type GamesResponse struct { // FIXME split into Create and Lookup response
