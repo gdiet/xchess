@@ -14,5 +14,6 @@ func main() {
 
 	http.HandleFunc("/api/games", restapi.HandleGamesRequests(gamesChan))
 	http.Handle("/", http.FileServer(http.Dir("./web")))
+	log.Println("Starting server on :7080")
 	log.Fatal(http.ListenAndServe(":7080", nil))
 }

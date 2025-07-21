@@ -26,12 +26,11 @@ func HandleGamesRequests(gamesChan chan games.GamesRequest) func(w http.Response
 			return
 		}
 
-		responseChan := make(chan games.GamesResponse)
-		gamesChan <- games.GamesRequest{
-			Command:      games.Create,
-			BoardLayout:  body.BoardLayout,
+		responseChan := make(chan games.CreateGameResponse)
+		gamesChan <- games.CreateGameRequest{
+			BoardLayout           : body.BoardLayout,
 			FreezeTimeMilliseconds: *body.FreezeTimeMilliseconds,
-			ResponseChan: responseChan,
+			ResponseChan          : responseChan,
 		}
 		response := <-responseChan
 		if response.Error != nil {

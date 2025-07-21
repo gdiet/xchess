@@ -14,51 +14,60 @@ func GamesRegistry() chan GamesRequest {
 	games := make(map[string]chan GameRequest)
 
 	go func() {
-		for req := range gamesChan {
-			switch req.Command {
-
-			case Create:
-				var gameID string
-				for {
-					gameID = fmt.Sprintf("%06d", rand.Intn(1000000))
-					if _, exists := games[gameID]; !exists {
-						break
-					}
-				}
-				games[gameID] = make(chan GameRequest)
-				req.ResponseChan <- GamesResponse{GameID: gameID}
-
-			case Lookup:
-				if gameChan, exists := games[req.GameID]; exists {
-					req.ResponseChan <- GamesResponse{GameID: req.GameID, GameChan: gameChan}
-				} else {
-					req.ResponseChan <- GamesResponse{Error: fmt.Errorf("game not found")}
-				}
-			}
+		for request := range gamesChan {
+			request.Execute(games)
 		}
 	}()
 	return gamesChan
 }
 
-type GamesCommand string
-
-const (
-	Create GamesCommand = "create"
-	Lookup GamesCommand = "lookup"
-)
-
-type GamesRequest struct {
-	Command                GamesCommand
-	BoardLayout            string // only for create command
-	FreezeTimeMilliseconds int    // only for create command
-	GameID                 string // only for lookup command
-	ResponseChan           chan GamesResponse
+type GamesRequest interface {
+	Execute(games map[string]chan GameRequest)
 }
 
-type GamesResponse struct { // FIXME split into Create and Lookup response
-	GameID   string           // only for create command
-	GameChan chan GameRequest // only for lookup command
-	Error    error
+type CreateGameRequest struct {
+	BoardLayout            string
+	FreezeTimeMilliseconds int
+	ResponseChan           chan CreateGameResponse
+}
+
+func (req CreateGameRequest) Execute(games map[string]chan GameRequest) {
+	if len(games) >= 10 {
+		req.ResponseChan <- CreateGameResponse{Error: fmt.Errorf("Too many games")}
+		return
+	}
+	var gameID string
+	for {
+		gameID = fmt.Sprintf("%06d", rand.Intn(1000000))
+		if _, exists := games[gameID]; !exists {
+			break
+		}
+	}
+	games[gameID] = make(chan GameRequest)
+	req.ResponseChan <- CreateGameResponse{GameID: gameID}
+}
+
+type LookupGameRequest struct {
+	GameID      string
+	ResponseChan chan LookupGameResponse
+}
+
+func (req LookupGameRequest) Execute(games map[string]chan GameRequest) {
+	if gameChan, exists := games[req.GameID]; exists {
+		req.ResponseChan <- LookupGameResponse{GameChan: gameChan}
+	} else {
+		req.ResponseChan <- LookupGameResponse{Error: fmt.Errorf("game %s not found", req.GameID)}
+	}
+}
+
+type CreateGameResponse struct {
+	GameID string
+	Error  error // too many games
+}
+
+type LookupGameResponse struct {
+	GameChan chan GameRequest
+	Error    error // game not found
 }
 
 type GameCommand string
