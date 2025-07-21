@@ -1,30 +1,43 @@
 package games
 
+import (
+	"fmt"
+	"math/rand"
+)
+
 /*
 we need a function returning a channel for the games commands, which handles the commands to update the games registry (create & lookup). this channel is instantiated as singleton in the main.go file.
 */
 
 func GamesRegistry() chan GamesRequest {
-	gamesChannel := make(chan GamesRequest)
-	// go func() {
-	// 	games := make(map[string]PostGamesBody)
+	gamesChan := make(chan GamesRequest)
+	games := make(map[string]chan GameRequest)
 
-	// 	for req := range gamesChannel {
-	// 		switch req.Command {
-	// 		case Create:
-	// 			gameID := fmt.Sprintf("%06d", rand.Intn(1000000))
-	// 			games[gameID] = req.Body
-	// 			req.ResponseChan <- GamesResponse{Result: gameID, Error: nil}
-	// 		case Lookup:
-	// 			if body, exists := games[req.GameID]; exists {
-	// 				req.ResponseChan <- GamesResponse{Result: body, Error: nil}
-	// 			} else {
-	// 				req.ResponseChan <- GamesResponse{Error: fmt.Errorf("game not found")}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	return gamesChannel
+	go func() {
+		for req := range gamesChan {
+			switch req.Command {
+
+			case Create:
+				var gameID string
+				for {
+					gameID = fmt.Sprintf("%06d", rand.Intn(1000000))
+					if _, exists := games[gameID]; !exists {
+						break
+					}
+				}
+				games[gameID] = make(chan GameRequest)
+				req.ResponseChan <- GamesResponse{GameID: gameID}
+
+			case Lookup:
+				if gameChan, exists := games[req.GameID]; exists {
+					req.ResponseChan <- GamesResponse{GameID: req.GameID, GameChan: gameChan}
+				} else {
+					req.ResponseChan <- GamesResponse{Error: fmt.Errorf("game not found")}
+				}
+			}
+		}
+	}()
+	return gamesChan
 }
 
 type GamesCommand string
@@ -35,24 +48,42 @@ const (
 )
 
 type GamesRequest struct {
-	Command    		  GamesCommand
+	Command      GamesCommand
+	GameID       string             // only for lookup command
 	ResponseChan chan GamesResponse
 }
 
-type GamesResponse struct {
-	Result string
-	Error  error
+type GamesResponse struct { // FIXME split into Create and Lookup response
+	GameID   string           // only for create command
+	GameChan chan GameRequest // only for lookup command
+	Error    error
 }
 
 type GameCommand string
 
 const (
-	Chat    GameCommand = "chat"
-	Move    GameCommand = "move"
-	Pause   GameCommand = "pause"
-	Resume  GameCommand = "resume"
+	Subscribe GameCommand = "subscribe"
+	Chat      GameCommand = "chat"
+	Plan      GameCommand = "plan"
+	Pause     GameCommand = "pause"
+	Resume    GameCommand = "resume"
 )
 
 type GameRequest struct {
-	Command GameCommand
+	Command  GameCommand
+	BackChan chan GameUpdate
+}
+
+type GameTopic string
+const (
+	ChatTopic   GameTopic = "chat"
+	PlanTopic   GameTopic = "plan"
+	MoveTopic   GameTopic = "move"
+	PauseTopic  GameTopic = "pause"
+	ResumeTopic GameTopic = "resume"
+)
+
+type GameUpdate struct {
+	Topic GameTopic
+	Data  interface{}
 }
