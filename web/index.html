@@ -24,7 +24,7 @@
             throw new Error(
               r.status + " " + r.statusText + ": " + (await r.text())
             );
-          const gameId = await r.json().gameId;
+          const gameId = (await r.json()).gameId;
           console.log("Game created:", gameId);
           window.open(`/game.html?gameId=${gameId}`, "_blank");
         } catch (error) {
