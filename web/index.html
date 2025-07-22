@@ -26,7 +26,8 @@
             );
           const gameId = (await r.json()).gameId;
           console.log("Game created:", gameId);
-          window.open(`/game.html?gameId=${gameId}`, "_blank");
+          window.location.href = `/game.html?gameId=${gameId}`;
+          // window.open(`/game.html?gameId=${gameId}`, "_blank");
         } catch (error) {
           console.error("Error creating game:", error);
         }

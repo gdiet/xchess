@@ -6,6 +6,17 @@
     <!-- <button onclick="send()">Start game</button> -->
 
     <script>
+      const gameId = new URLSearchParams(window.location.search).get("gameId");
+      console.log("gameId:", gameId);
+
+      const ws = new WebSocket(`ws://${window.location.host}/ws/${gameId}`);
+      ws.onerror = () => console.warn("WebSocket error occurred.");
+      ws.onmessage = (e) => console.log("WebSocket message received:", e.data);
+
+      ws.onopen = () => {
+        ws.send("Hello from game.html!");
+      };
+
       // (async () => {
       //   try {
       //     const r = await fetch("/api/games", {

@@ -14,6 +14,17 @@ import (
 func WsHandler(gamesChan chan games.GamesRequest, getGameID util.ParamCallback) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId   := getGameID(r)
+		responseChan := make(chan games.LookupGameResponse)
+		gamesChan <- games.LookupGameRequest{
+			GameID:      gameId,
+			ResponseChan: responseChan,
+		}
+		response := <-responseChan
+		if response.Error != nil {
+			http.Error(w, response.Error.Error(), http.StatusNotFound)
+			return
+		}
+
 		clientID := fmt.Sprintf("%06d", rand.Intn(1_000_000)) // 000000 to 999999
 
 		ws, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
