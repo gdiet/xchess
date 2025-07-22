@@ -20,7 +20,7 @@ func main() {
 
 	router.HandleFunc("/api/games", restapi.HandleGamesRequests(gamesChan))
 	router.HandleFunc("/ws/{gameId}", websockets.WsHandler(gamesChan, util.RequestParam("gameId")))
-	router.Handle("/", http.FileServer(http.Dir("./web")))
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
 	http.Handle("/", router)
 	log.Println("Starting server on :7080")
