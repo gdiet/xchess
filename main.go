@@ -7,15 +7,23 @@ import (
 	"xchess/restapi"
 	"xchess/validation"
 	"xchess/websockets"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
 	validation.Init()
+
+	router    := mux.NewRouter()
 	gamesChan := games.GamesRegistry()
 
-	http.HandleFunc("/api/games", restapi.HandleGamesRequests(gamesChan))
-	http.HandleFunc("/ws", websockets.WsHandler(gamesChan))
-	http.Handle("/", http.FileServer(http.Dir("./web")))
+	router.HandleFunc("/api/games", restapi.HandleGamesRequests(gamesChan))
+	router.HandleFunc("/ws/{gameId}", websockets.WsHandler(gamesChan, func(r *http.Request) string {
+        return mux.Vars(r)["gameId"]
+    }))
+	router.Handle("/", http.FileServer(http.Dir("./web")))
+
+	http.Handle("/", router)
 	log.Println("Starting server on :7080")
-	log.Fatal(http.ListenAndServe(":7080", nil))
+	log.Fatal(http.ListenAndServe(":7080", router))
 }

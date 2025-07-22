@@ -1,23 +1,47 @@
 <!DOCTYPE html>
 <html>
-<body>
-<h1>WebSocket Test</h1>
-<input id="input" placeholder="Type message" />
-<button onclick="send()">Send</button>
-<pre id="output"></pre>
+  <body>
+    <h1>WebSocket Test</h1>
+    <input id="input" placeholder="Type message" />
+    <button onclick="send()">Send</button>
+    <pre id="output"></pre>
 
-<script>
-  const ws = new WebSocket(`ws://${window.location.host}/ws`);
+    <script>
+      (async () => {
+        try {
+          const r = await fetch("/api/games", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              boardLayout: "standard",
+              freezeTimeMilliseconds: 10000,
+            }),
+          });
+          if (!r.ok)
+            throw new Error(
+              r.status + " " + r.statusText + ": " + (await r.text())
+            );
+          const data = await r.json();
+          console.log("Game created:", data);
 
-  ws.onmessage = (event) => {
-    document.getElementById("output").textContent += "Received: " + event.data + "\n";
-  };
+          const ws = new WebSocket(
+            `ws://${window.location.host}/ws/${data.gameId}`
+          );
 
-  function send() {
-    const input = document.getElementById("input");
-    ws.send(input.value);
-    input.value = "";
-  }
-</script>
-</body>
+          ws.onmessage = (event) => {
+            document.getElementById("output").textContent +=
+              "Received: " + event.data + "\n";
+          };
+
+          window.send = function () {
+            const input = document.getElementById("input");
+            ws.send(input.value);
+            input.value = "";
+          };
+        } catch (error) {
+          console.error("Error creating game:", error);
+        }
+      })();
+    </script>
+  </body>
 </html>

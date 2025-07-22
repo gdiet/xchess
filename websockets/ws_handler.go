@@ -10,8 +10,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func WsHandler(gamesChan chan games.GamesRequest) http.HandlerFunc {
+func WsHandler(gamesChan chan games.GamesRequest, getGameID func(*http.Request) string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		gameId   := getGameID(r)
 		clientID := fmt.Sprintf("%06d", rand.Intn(1_000_000)) // 000000 to 999999
 
 		ws, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
@@ -19,8 +20,8 @@ func WsHandler(gamesChan chan games.GamesRequest) http.HandlerFunc {
 			log.Println("Client", clientID, "websocket upgrade error:", err)
 			return
 		}
-		log.Println("Client", clientID, "connected.")
-		defer log.Println("Client", clientID, "disconnected.")
+		log.Println("Client", clientID, "connected to game:", gameId)
+		defer log.Println("Client", clientID, "disconnected from game:", gameId)
 		defer ws.Close()
 
 		for {
