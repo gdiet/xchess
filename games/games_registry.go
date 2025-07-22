@@ -27,7 +27,7 @@ type CreateGameRequest struct {
 }
 
 func (req CreateGameRequest) Execute(games map[string]chan GameRequest) {
-	if len(games) >= 10 {
+	if len(games) >= 3 {
 		req.ResponseChan <- CreateGameResponse{Error: fmt.Errorf("too many games")}
 		return
 	}
