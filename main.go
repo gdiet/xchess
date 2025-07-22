@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"xchess/games"
 	"xchess/restapi"
+	"xchess/util"
 	"xchess/validation"
 	"xchess/websockets"
 
@@ -18,9 +19,7 @@ func main() {
 	gamesChan := games.GamesRegistry()
 
 	router.HandleFunc("/api/games", restapi.HandleGamesRequests(gamesChan))
-	router.HandleFunc("/ws/{gameId}", websockets.WsHandler(gamesChan, func(r *http.Request) string {
-        return mux.Vars(r)["gameId"]
-    }))
+	router.HandleFunc("/ws/{gameId}", websockets.WsHandler(gamesChan, util.RequestParam("gameId")))
 	router.Handle("/", http.FileServer(http.Dir("./web")))
 
 	http.Handle("/", router)

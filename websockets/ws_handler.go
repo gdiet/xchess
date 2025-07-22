@@ -6,11 +6,12 @@ import (
 	"math/rand"
 	"net/http"
 	"xchess/games"
+	"xchess/util"
 
 	"github.com/gorilla/websocket"
 )
 
-func WsHandler(gamesChan chan games.GamesRequest, getGameID func(*http.Request) string) http.HandlerFunc {
+func WsHandler(gamesChan chan games.GamesRequest, getGameID util.ParamCallback) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gameId   := getGameID(r)
 		clientID := fmt.Sprintf("%06d", rand.Intn(1_000_000)) // 000000 to 999999
