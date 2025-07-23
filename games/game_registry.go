@@ -6,6 +6,7 @@ func GameRegistry(boardLayout string, freezeTimeMilliseconds int) chan GameReque
 		FreezeTimeMilliseconds: freezeTimeMilliseconds,
 		Pause:                  true,
 		Chat:                   make([]string, 0),
+		Subscribers:            make(map[chan interface{}]struct{}),
 	}
 	go func() {
 		for req := range gameChan {

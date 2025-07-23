@@ -1,9 +1,7 @@
 package websockets
 
 import (
-	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"xchess/games"
 	"xchess/util"
@@ -12,8 +10,10 @@ import (
 )
 
 func WsHandler(gamesChan chan games.GamesRequest, getGameID util.ParamCallback) http.HandlerFunc {
+	clientIDs := util.NewIDManager()
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		gameId   := getGameID(r)
+		gameId       := getGameID(r)
 		responseChan := make(chan games.LookupGameResponse)
 		gamesChan <- games.LookupGameRequest{
 			GameID:      gameId,
@@ -24,8 +24,9 @@ func WsHandler(gamesChan chan games.GamesRequest, getGameID util.ParamCallback) 
 			http.Error(w, response.Error.Error(), http.StatusNotFound)
 			return
 		}
+		gameChan := response.GameChan
 
-		clientID := fmt.Sprintf("%06d", rand.Intn(1_000_000)) // 000000 to 999999
+		clientID := clientIDs.GetNewID()
 
 		ws, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
 		if err != nil {
@@ -33,7 +34,15 @@ func WsHandler(gamesChan chan games.GamesRequest, getGameID util.ParamCallback) 
 			return
 		}
 		log.Println("Client", clientID, "connected to game:", gameId)
+
+		updatesChan := make(chan interface{})
+		gameChan <- games.SubscribeGameRequest{
+			UpdatesChan: updatesChan,
+		}
+
+		defer clientIDs.UnregisterID(clientID)
 		defer log.Println("Client", clientID, "disconnected from game:", gameId)
+		defer func() { gameChan <- games.UnsubscribeGameRequest{ UpdatesChan: updatesChan } }()
 		defer ws.Close()
 
 		for {
