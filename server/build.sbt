@@ -5,4 +5,6 @@ lazy val xchess = project
     version := "current",
     scalaVersion := "3.3.5", // 3.3.x is LTS
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
+    libraryDependencies += "com.lihaoyi" %% "cask" % "0.9.7",
+    fork := true
   )
