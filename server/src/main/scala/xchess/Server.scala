@@ -1,41 +1,40 @@
 package xchess
 
-import java.nio.file.{Files, Paths}
+import cask.model.Response
+import cask.model.Response.{Data, Raw}
+import ujson.Obj
+
+import java.io.InputStream
+import java.nio.file.{Files, Path, Paths}
+import scala.annotation.tailrec
 
 object Server extends cask.MainRoutes:
-
   override def port = 7070
-
-// FIXME doesn't work:
-//
-//  @cask.get("/api")
-//  def api() = "api"
-//
-//  @staticFilesWithIndex("/")
-//  def staticFiles() = "src/main/resources"
-
-// FIXME chatgpt proposal:
-
-  // 1. API-Routen
-  @cask.get("/api/hello")
-  def hello() = ujson.Obj("msg" -> "Hello from API!")
-
-  // 3. Catch-all Route für alle anderen Routen außer /api
-  @cask.get("/:path", subpath = true)
-  def fallback(ctx: cask.Request, path: Seq[String]) = {
-    val fullPath = "/" + path.mkString("/")
-    if (fullPath.startsWith("/api") || fullPath.startsWith("/assets")) {
-      cask.Response("Not Found", statusCode = 404)
-    } else {
-      val indexPath = Paths.get("src/main/resources/index.html")
-      if (Files.exists(indexPath)) {
-        val content = Files.readString(indexPath)
-        cask.Response(content, headers = List("Content-Type" -> "text/html"))
-      } else {
-        cask.Response("index.html not found", statusCode = 500)
-      }
-    }
-  }
-
   initialize()
   println(s"xChess server started at port $port")
+
+  private val webRoot: Path = Paths.get("src/main/resources")
+
+  // API routes
+  @cask.get("/api/hello")
+  def apiRoutes(): Obj = ujson.Obj("msg" -> "Hello from API!")
+
+  // Web routes
+  @cask.get("/:path", subpath = true)
+  def webRoutes(ctx: cask.Request, path: Seq[String]): Response[Data] =
+    serveStaticFile(path ++ ctx.remainingPathSegments)
+
+  @cask.get("")
+  def rootRoute(): Response[Data] =
+    serveStaticFile(Seq())
+
+  @tailrec
+  private def serveStaticFile(path: Seq[String]): Response[Data] =
+    val filePath = path.foldLeft(webRoot)(_.resolve(_))
+    if Files.isDirectory(filePath) then
+      serveStaticFile(path :+ "index.html")
+    else if Files.isRegularFile(filePath) then
+      val contentType = Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
+      Response(java.nio.file.Files.newInputStream(filePath): Data, 200, Seq("Content-Type" -> contentType))
+    else
+      Response("": Data, 404)
