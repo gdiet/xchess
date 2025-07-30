@@ -6,8 +6,7 @@ def firstScheduledMove(board: Board, plannedMoves: ListMap[Square, Square], game
   plannedMoves.collectFirst { case (from, to) if board.map.get(from).exists(_.frozenUntil <= gameTime) => (from, to) }
 
 def tryMove(board: Board, from: Square, to: Square): Object =
-  if (from == to)
-    ???
+  if (from == to) ???
   else board.map.get(from) match {
     case None => ???
     case Some((piece, _)) =>
@@ -42,26 +41,28 @@ def createBoard(name: String, initialFreezeTime: Long = 3000): Board = {
 }
 
 private def boardLayout(name: String): String = name match {
-  case "large" => """|RRNNBBQKQBBNNRR
-                     |RRNNBBQQQBBNNRR
-                     |PPPPPPPPPPPPPPP
-                     |PPPPPPPPPPPPPPP
-                     |+++++++++++++++
-                     |+++++++++++++++
-                     |+++++++++++++++
-                     |+++++++++++++++
-                     |+++++++++++++++
-                     |ppppppppppppppp
-                     |ppppppppppppppp
-                     |rrnnbbqqqbbnnrr
-                     |rrnnbbqkqbbnnrr""".stripMargin
+  case "large" =>
+   """|RRNNBBQKQBBNNRR
+      |RRNNBBQQQBBNNRR
+      |PPPPPPPPPPPPPPP
+      |PPPPPPPPPPPPPPP
+      |+++++++++++++++
+      |+++++++++++++++
+      |+++++++++++++++
+      |+++++++++++++++
+      |+++++++++++++++
+      |ppppppppppppppp
+      |ppppppppppppppp
+      |rrnnbbqqqbbnnrr
+      |rrnnbbqkqbbnnrr""".stripMargin
 
-  case _ =>       """|RNBQKBNR
-                     |PPPPPPPP
-                     |++++++++
-                     |++++++++
-                     |++++++++
-                     |++++++++
-                     |pppppppp
-                     |rnbqkbnr""".stripMargin
+  case _ =>
+   """|RNBQKBNR
+      |PPPPPPPP
+      |++++++++
+      |++++++++
+      |++++++++
+      |++++++++
+      |pppppppp
+      |rnbqkbnr""".stripMargin
 }
