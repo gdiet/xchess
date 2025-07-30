@@ -19,6 +19,18 @@ object Server extends cask.MainRoutes:
   @cask.get("/api/hello")
   def apiRoutes(): Obj = ujson.Obj("msg" -> "Hello from API!")
 
+  // Websockets
+  @cask.websocket("/ws/:gameId")
+  def websockets(gameId: Int): cask.WebsocketResult =
+    if gameId < 0 then
+      cask.Response("Game not found", 404)
+    else
+      cask.WsHandler { ws =>
+        cask.WsActor {
+          case cask.Ws.Text(message) => ws.send(cask.Ws.Text(s"Received message for game $gameId: $message"))
+        }
+      }
+
   // Web routes
   @cask.get("/:path", subpath = true)
   def webRoutes(ctx: cask.Request, path: Seq[String]): Response[Data] =

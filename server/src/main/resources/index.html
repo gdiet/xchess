@@ -1,5 +1,23 @@
-<html lang="de">
-    <body>
-        Hallo Welt
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<h1>WebSocket Test</h1>
+<label for="input">Text to send</label><input id="input" placeholder="Type message" />
+<button onclick="send()">Send</button>
+<pre id="output"></pre>
+
+<script>
+    const ws = new WebSocket(`ws://${window.location.host}/ws/17`);
+
+    ws.onmessage = (event) => {
+      document.getElementById("output").textContent += "Received: " + event.data + "\n";
+    };
+
+    function send() {
+      const input = document.getElementById("input");
+      ws.send(input.value);
+      input.value = "";
+    }
+</script>
+</body>
 </html>
