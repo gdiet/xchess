@@ -1,7 +1,7 @@
 package xchess
 
 import cask.model.Response
-import cask.model.Response.{Data, Raw}
+import cask.model.Response.Data
 import ujson.Obj
 
 import java.io.InputStream
