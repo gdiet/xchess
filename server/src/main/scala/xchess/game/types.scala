@@ -27,5 +27,13 @@ object File:
   extension (r: File) def value: Int = r
   extension (r: File) def - (other: File): Int = r.value - other.value
 
+opaque type GameTime = Long // in milliseconds, 0 is the start of the game
+object GameTime:
+  def apply(value: Long): GameTime = value
+  extension (r: GameTime) def value: Long = r
+  extension (r: GameTime) def <=(other: GameTime): Boolean = r.value <= other.value
+
 type Square = (file: File, rank: Rank)
-type MapEntry = (piece: Piece, frozenUntil: Long)
+
+type MapEntry = (piece: Piece, frozenUntil: GameTime)
+
