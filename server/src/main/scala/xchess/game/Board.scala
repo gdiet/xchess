@@ -12,37 +12,37 @@ def tryMove(board: Board, from: Square, to: Square): Option[Square] = {
   board.map.get(from) match {
     case None => None // no piece at square: should not happen
     case Some((piece, _)) =>
-      val ranks = to.rank - from.rank // difference in ranks (vertical movement, e.g. 1 -> 2)
-      val files = to.file - from.file // difference in files (horizontal movement, e.g. a -> b)
+      val rows = to.row - from.row // difference in rows (vertical movement, e.g. 1 -> 2)
+      val cols = to.col - from.col // difference in cols (horizontal movement, e.g. a -> b)
 
       def pawnMoveOneLogic: Option[Square] =
-        if Math.abs(ranks) != 1 then None // must move exactly one rank
-        else if ranks < 0 == piece.isWhite then None // must move in the right direction
-        else if Math.abs(files) > 1 then None // must not move more than one file
-        else if files == 0 && board.map.contains(to) then None // must not capture a piece on the same file
-        else if Math.abs(files) == 1 && !board.map.contains(to) then None // must capture a piece if moving diagonally
+        if Math.abs(rows) != 1 then None // must move exactly one row
+        else if rows < 0 == piece.isWhite then None // must move in the right direction
+        else if Math.abs(cols) > 1 then None // must not move more than one col
+        else if cols == 0 && board.map.contains(to) then None // must not capture a piece on the same col
+        else if Math.abs(cols) == 1 && !board.map.contains(to) then None // must capture a piece if moving diagonally
         else Some(to) // yay
 
       piece.value.toUpper match {
         case 'K' => // King move logic
-          if Math.abs(ranks) > 1 || Math.abs(files) > 1 then None // must not move more than one square in any direction
+          if Math.abs(rows) > 1 || Math.abs(cols) > 1 then None // must not move more than one square in any direction
           else Some(to)
         case 'Q' => // Queen move logic
-          if Math.abs(ranks) != Math.abs(files) && ranks != 0 && files != 0 then None // must move in a straight line or diagonally
+          if Math.abs(rows) != Math.abs(cols) && rows != 0 && cols != 0 then None // must move in a straight line or diagonally
           else ???
         case 'B' => // Bishop move logic
-          if Math.abs(ranks) != Math.abs(files) then None // must move diagonally
+          if Math.abs(rows) != Math.abs(cols) then None // must move diagonally
           else ???
         case 'N' => // Knight move logic
-          if Math.abs(ranks) * Math.abs(files) != 2 then None // must move in an L-shape
+          if Math.abs(rows) * Math.abs(cols) != 2 then None // must move in an L-shape
           else Some(to)
         case 'R' => // Rook move logic
-          if ranks != 0 && files != 0 then None // must move in a straight line
+          if rows != 0 && cols != 0 then None // must move in a straight line
           else ???
         case 'P' => // Pawn not moved logic
-          if Math.abs(ranks) <= 1 then pawnMoveOneLogic
-          else if Math.abs(ranks) > 2 then None // must not move more than two ranks
-          else if files != 0 then None // must not move horizontally when advancing two ranks
+          if Math.abs(rows) <= 1 then pawnMoveOneLogic
+          else if Math.abs(rows) > 2 then None // must not move more than two rows
+          else if cols != 0 then None // must not move horizontally when advancing two rows
           else ???
         case 'M' => // Pawn already moved logic
           pawnMoveOneLogic
@@ -55,12 +55,12 @@ case class Board(size: Square, map: Map[Square, MapEntry])
 
 def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board = {
   val lines = boardLayout(name).linesIterator.toSeq
-  val size = (file = File(lines.head.length), rank = Rank(lines.length))
+  val size = (col = Col(lines.head.length), row = Row(lines.length))
   val pieces = for {
     (line,  y) <- lines.zipWithIndex
     (piece, x) <- line .zipWithIndex
     if piece != '+'
-  } yield (File(x), Rank(y)) -> (Piece(piece), initialFreezeUntil)
+  } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
   Board (size, pieces.toMap)
 }
 

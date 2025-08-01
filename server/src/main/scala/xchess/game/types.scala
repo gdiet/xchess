@@ -15,17 +15,17 @@ object Piece:
   extension (r: Piece) def value: Char = r
   extension (r: Piece) def isWhite: Boolean = r.isUpper
 
-opaque type Rank = Int // 1 to 8 in standard chess, here 0 to 7 (more for large boards)
-object Rank:
-  def apply(value: Int): Rank = value
-  extension (r: Rank) def value: Int = r
-  extension (r: Rank) def - (other: Rank): Int = r.value - other.value
+opaque type Row = Int // 1 to 8 in standard chess, here 0 to 7 (more for large boards)
+object Row:
+  def apply(value: Int): Row = value
+  extension (r: Row) def value: Int = r
+  extension (r: Row) def - (other: Row): Int = r.value - other.value
 
-opaque type File = Int // a to h in standard chess, here 0 to 7 (more for large boards)
-object File:
-  def apply(value: Int): File = value
-  extension (r: File) def value: Int = r
-  extension (r: File) def - (other: File): Int = r.value - other.value
+opaque type Col = Int // a to h in standard chess, here 0 to 7 (more for large boards)
+object Col:
+  def apply(value: Int): Col = value
+  extension (r: Col) def value: Int = r
+  extension (r: Col) def - (other: Col): Int = r.value - other.value
 
 opaque type GameTime = Long // in milliseconds, 0 is the start of the game
 object GameTime:
@@ -33,7 +33,6 @@ object GameTime:
   extension (r: GameTime) def value: Long = r
   extension (r: GameTime) def <=(other: GameTime): Boolean = r.value <= other.value
 
-type Square = (file: File, rank: Rank)
+type Square = (col: Col, row: Row)
 
 type MapEntry = (piece: Piece, frozenUntil: GameTime)
-
