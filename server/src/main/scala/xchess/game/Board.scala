@@ -40,7 +40,9 @@ def tryMove(board: Board, from: Square, to: Square): Option[Square] = {
           if ranks != 0 && files != 0 then None // must move in a straight line
           else ???
         case 'P' => // Pawn not moved logic
-          if Math.abs(ranks) == 1 then pawnMoveOneLogic
+          if Math.abs(ranks) <= 1 then pawnMoveOneLogic
+          else if Math.abs(ranks) > 2 then None // must not move more than two ranks
+          else if files != 0 then None // must not move horizontally when advancing two ranks
           else ???
         case 'M' => // Pawn already moved logic
           pawnMoveOneLogic
