@@ -2,27 +2,23 @@ package xchess.game
 
 import scala.collection.immutable.ListMap
 
-case class Game(
-  board: Board,
-  plannedMoves: ListMap[Square, Square],
-  freezeTime: Long
-)
+case class Game(board: Board, plannedMoves: ListMap[Square, Square], freezeTime: Long)
 
 @annotation.tailrec
-def executeAllScheduledMoves(game: Game, gameTime: GameTime): Game =
-  executeNextScheduledMove(game, game.plannedMoves.iterator, gameTime) match
+def executeScheduledMoves(game: Game, time: GameTime): Game =
+  executeNextScheduledMove(game, game.plannedMoves.iterator, time) match
     case None => game // no more moves to execute
-    case Some(newGame) => executeAllScheduledMoves(newGame, gameTime) // recursively execute next move
+    case Some(newGame) => executeScheduledMoves(newGame, time) // recursively execute next move
 
 @annotation.tailrec
-def executeNextScheduledMove(game: Game, moves: Iterator[(Square, Square)], gameTime: GameTime): Option[Game] =
+def executeNextScheduledMove(game: Game, moves: Iterator[(Square, Square)], time: GameTime): Option[Game] =
   import game.*
   moves.nextOption match
     case None => None // no more planned moves
     case Some(from, to) => board.map.get(from) match
       case None => Some(game.copy(plannedMoves = plannedMoves - from)) // piece not found, remove move
-      case Some(_, frozenUntil) if frozenUntil > gameTime => executeNextScheduledMove(game, moves, gameTime) // piece is frozen, skip this move
-      case Some((piece, _)) => Some(handleMoveCommand(game, piece, from, to, gameTime))
+      case Some(_, frozenUntil) if frozenUntil > time => executeNextScheduledMove(game, moves, time) // piece is frozen, skip this move
+      case Some((piece, _)) => Some(handleMoveCommand(game, piece, from, to, time))
 
 def handleMoveCommand(game: Game, piece: Piece, from: Square, to: Square, gameTime: GameTime): Game =
   import game.*
