@@ -34,5 +34,9 @@ object GameTime:
   extension (r: GameTime) def <=(other: GameTime): Boolean = r.value <= other.value
 
 type Square = (col: Col, row: Row)
+object Square:
+  def apply(string: String): Square = (col = string.head - 'A', row = string.tail.toInt - 1)
+  extension (s: Square) def string: String = s"${('A' + s.col).toChar}${s.row + 1}"
+  extension (s: Square) def +(cols: Int, rows: Int): Square = (s.col + cols, s.row + rows)
 
 type MapEntry = (piece: Piece, frozenUntil: GameTime)
