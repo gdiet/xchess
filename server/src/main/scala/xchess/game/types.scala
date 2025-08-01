@@ -32,6 +32,8 @@ object GameTime:
   def apply(value: Long): GameTime = value
   extension (r: GameTime) def value: Long = r
   extension (r: GameTime) def <=(other: GameTime): Boolean = r.value <= other.value
+  extension (r: GameTime) def > (other: GameTime): Boolean = r.value >  other.value
+  extension (r: GameTime) def + (timespan: Long): GameTime = r.value + timespan
 
 type Square = (col: Col, row: Row)
 object Square:
