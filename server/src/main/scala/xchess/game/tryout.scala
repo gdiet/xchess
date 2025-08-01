@@ -6,11 +6,11 @@ import scala.collection.immutable.ListMap
 def tryout(): Unit = {
   val board = createBoard("standard")
   val plannedMoves = ListMap(
-    Square("B2") -> Square("B3"),
-    Square("C2") -> Square("C4"),
-    Square("C1") -> Square("A3"),
-    Square("A2") -> Square("A4")
-  )
+    "B2" -> "B3",
+    "C2" -> "C4",
+    "C1" -> "A3",
+    "A2" -> "A4",
+  ).map(Square(_) -> Square(_))
   val game = Game(board, plannedMoves, 3000)
   println(executeScheduledMoves(game, GameTime(3000)))
 }
