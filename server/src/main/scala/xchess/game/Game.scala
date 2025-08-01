@@ -25,5 +25,5 @@ def handleMoveCommand(game: Game, piece: Piece, from: Square, to: Square, gameTi
   tryMove(board, piece, from, to) match
     case None => game.copy(plannedMoves = plannedMoves - from) // move not valid, remove it
     case Some(target) =>
-      val newBoard = board.copy(map = board.map - from + (target -> (piece, gameTime + freezeTime)))
+      val newBoard = board.copy(map = board.map - from + (target -> (piece.moved, gameTime + freezeTime)))
       game.copy(board = newBoard, plannedMoves = plannedMoves - from - target) // execute the move

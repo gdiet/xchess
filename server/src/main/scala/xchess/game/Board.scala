@@ -2,9 +2,20 @@ package xchess.game
 
 import xchess.game.Square.*
 
-import scala.collection.immutable.ListMap
-
-case class Board(size: Square, map: Map[Square, MapEntry])
+case class Board(size: Square, map: Map[Square, MapEntry]) {
+  override def toString: String = {
+    val rows = for (r <- (0 until size.row.value).reverse) yield {
+      val cols = for (c <- 0 until size.col.value) yield {
+        map.get((Col(c), Row(r))) match {
+          case Some((piece, _)) => piece.value
+          case None => '+'
+        }
+      }
+      cols.mkString("  ")
+    }
+    rows.mkString("\n", "\n", "\n")
+  }
+}
 
 def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board = {
   val lines = boardLayout(name).linesIterator.toSeq
@@ -16,24 +27,6 @@ def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Bo
   } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
   Board(size, pieces.toMap)
 }
-
-//def firstScheduledMove(board: Board, plannedMoves: ListMap[Square, Square], gameTime: GameTime): Option[(Square, Square)] =
-//  plannedMoves.collectFirst { case (from, to) if board.map.get(from).exists(_.frozenUntil <= gameTime) => (from, to) }
-//
-//def executeNextMove(board: Board, plannedMoves: ListMap[Square, Square], gameTime: GameTime, freezeUntil: GameTime) = {
-//  firstScheduledMove(board, plannedMoves, gameTime) match {
-//    case None =>  // no move to execute
-//    case Some((from, to)) =>
-//      executeMove(board, from, to, freezeUntil).map { case (newBoard, movedTo) =>
-//        (newBoard.copy(map = newBoard.map - from), movedTo)
-//      }
-//  }
-////    .flatMap { case (from, to) =>
-////    executeMove(board, from, to, gameTime).map { case (newBoard, movedTo) =>
-////      (newBoard.copy(map = newBoard.map - from), movedTo)
-////    }
-////  }
-//}
 
 def executeMove(board: Board, from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] = {
   board.map.get(from).flatMap { case (piece, _) =>

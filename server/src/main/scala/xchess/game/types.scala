@@ -14,6 +14,10 @@ object Piece:
   def apply(value: Char): Piece = value
   extension (r: Piece) def value: Char = r
   extension (r: Piece) def isWhite: Boolean = r.isUpper
+  extension (r: Piece) def moved: Piece = r match
+    case 'P' => 'M' // white pawn moved
+    case 'p' => 'm' // black pawn moved
+    case _   =>  r
 
 opaque type Row = Int // 1 to 8 in standard chess, here 0 to 7 (more for large boards)
 object Row:
