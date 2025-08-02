@@ -19,14 +19,12 @@ object Server extends cask.MainRoutes:
 
   // API routes
   @cask.postJson("/api/games")
-  def postGame[T](id: Option[String]): Response[Obj] =
+  def postGame(id: Option[String]): Response[Obj] =
     games.newGame(id) match
-      case Some(gameId) => ??? // ujson.Obj("id" -> gameId, "msg" -> "Game created successfully")
+      case Some(gameId) =>
+        Response(ujson.Obj("id" -> gameId, "msg" -> "Game created successfully"), 201)
       case None =>
-        Response(
-          ujson.Obj("error" -> "Failed to create game: ID conflict or too many games"),
-          409
-        )
+        Response(ujson.Obj("error" -> "Failed to create game: ID conflict or too many games"), 409)
 
   // Websockets
   @cask.websocket("/ws/:gameId")
