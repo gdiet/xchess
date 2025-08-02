@@ -10,20 +10,29 @@ import scala.annotation.tailrec
 
 object Server extends cask.MainRoutes:
   override def port = 7070
+  //  override def host = "0.0.0.0" // to allow access from other machines
   initialize()
   println(s"xChess server started at port $port")
 
   private val webRoot: Path = Paths.get("src/main/resources")
+  private val games: GameRegistry = GameRegistry()
 
   // API routes
-  @cask.get("/api/hello")
-  def apiRoutes(): Obj = ujson.Obj("msg" -> "Hello from API!")
+  @cask.postJson("/api/games")
+  def postGame[T](id: Option[String]): Response[Obj] =
+    games.newGame(id) match
+      case Some(gameId) => ??? // ujson.Obj("id" -> gameId, "msg" -> "Game created successfully")
+      case None =>
+        Response(
+          ujson.Obj("error" -> "Failed to create game: ID conflict or too many games"),
+          409
+        )
 
   // Websockets
   @cask.websocket("/ws/:gameId")
   def websockets(gameId: Int): cask.WebsocketResult =
     if gameId < 0 then
-      cask.Response("Game not found", 404)
+      Response("Game not found", 404)
     else
       cask.WsHandler { ws =>
         cask.WsActor {
