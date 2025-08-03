@@ -2,7 +2,7 @@ package xchess
 
 import cask.model.Response
 import cask.model.Response.Data
-import ujson.Obj
+import ujson.{Obj, Value}
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
@@ -18,25 +18,28 @@ object Server extends cask.MainRoutes:
   private val games: GameRegistry = GameRegistry()
 
   // API routes
-  @cask.postJson("/api/games")
-  def postGame(id: Option[String]): Response[Obj] =
+  @cask.post("/api/games")
+  def postGame(id: Option[String]): Response[Value] =
     games.newGame(id) match
       case Some(gameId) =>
         Response(ujson.Obj("id" -> gameId, "msg" -> "Game created successfully"), 201)
       case None =>
-        Response(ujson.Obj("error" -> "Failed to create game: ID conflict or too many games"), 409)
+        Response(ujson.Value("Failed to create game: ID conflict or too many games"), 409)
 
   // Websockets
   @cask.websocket("/ws/:gameId")
-  def websockets(gameId: Int): cask.WebsocketResult =
-    if gameId < 0 then
-      Response("Game not found", 404)
-    else
-      cask.WsHandler { ws =>
-        cask.WsActor {
-          case cask.Ws.Text(message) => ws.send(cask.Ws.Text(s"Received message for game $gameId: $message"))
+  def websockets(gameId: String): cask.WebsocketResult = {
+    games.game(gameId) match
+      case None => Response("Game not found", 404)
+      case Some(game) =>
+        cask.WsHandler { ws =>
+          game.subscribe(new Subscription {
+            override def message(message: String): Unit = cask.Ws.Text(message)
+            override def close(): Unit = ws.send(cask.Ws.Close())
+          })
+          cask.WsActor { case cask.Ws.Text(message) => game.receiveMessage(message) }
         }
-      }
+  }
 
   // Web routes
   @cask.get("/:path", subpath = true)

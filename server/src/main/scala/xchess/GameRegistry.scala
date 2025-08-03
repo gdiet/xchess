@@ -1,7 +1,6 @@
 package xchess
 
 class GameRegistry {
-
   private var games: Map[String, GameHandler] = Map()
   
   /** @return None if the game was not created (ID conflict or too many games) */
@@ -13,6 +12,24 @@ class GameRegistry {
       games += (gameId -> new GameHandler(this))
       Some(gameId)
   }
+  
+  def game(gameId: String): Option[GameHandler] = synchronized {
+    games.get(gameId)
+  }
 }
 
-class GameHandler(gameRegistry: GameRegistry)
+trait Subscription extends AutoCloseable {
+  def message(message: String): Unit
+}
+
+class GameHandler(gameRegistry: GameRegistry) {
+  def subscribe(subscription: Subscription): GameHandler = synchronized {
+    // Subscribe to the game, e.g., for notifications or updates
+    println("Subscribed to game")
+    this
+  }
+  def receiveMessage(message: String): Unit = synchronized {
+    // Handle incoming messages for the game
+    println(s"Received message for game: $message")
+  }
+}
