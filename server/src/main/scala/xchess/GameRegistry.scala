@@ -1,5 +1,7 @@
 package xchess
 
+import xchess.game.Game
+
 class GameRegistry {
   private var games: Map[String, GameHandler] = Map()
   
@@ -9,7 +11,7 @@ class GameRegistry {
     else if games.size >= 3 then None // too many games
     else
       val gameId = id.getOrElse(java.util.UUID.randomUUID().toString)
-      games += (gameId -> new GameHandler(this))
+      games += (gameId -> GameHandler())
       Some(gameId)
   }
 
@@ -22,9 +24,10 @@ trait Subscription extends AutoCloseable {
   def message(message: String): Unit
 }
 
-class GameHandler(gameRegistry: GameRegistry) {
+class GameHandler {
   private var chat: List[String] = List()
   private var subscriptions: Set[Subscription] = Set()
+  private var game: Game = Game("standard")
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
