@@ -1,7 +1,7 @@
 package xchess
 
-import cask.model.Response
-import cask.model.Response.Data
+import cask.Response.Data
+import cask.{Request, Response}
 import ujson.{Obj, Value}
 
 import java.io.InputStream
@@ -19,12 +19,14 @@ object Server extends cask.MainRoutes:
 
   // API routes
   @cask.post("/api/games")
-  def postGame(id: Option[String]): Response[Value] =
-    games.newGame(id) match
+  def postGame(ctx: Request): Response[Value] = {
+    val body = ujson.read(ctx.exchange.getInputStream).obj
+    games.newGame(body.get("id").flatMap(_.strOpt)) match
       case Some(gameId) =>
         Response(ujson.Obj("id" -> gameId, "msg" -> "Game created successfully"), 201)
       case None =>
-        Response(ujson.Value("Failed to create game: ID conflict or too many games"), 409)
+        Response(ujson.Obj("cause" -> "ID conflict or too many games"), 409)
+  }
 
   // Websockets
   @cask.websocket("/ws/:gameId")
@@ -33,11 +35,15 @@ object Server extends cask.MainRoutes:
       case None => Response("Game not found", 404)
       case Some(game) =>
         cask.WsHandler { ws =>
-          game.subscribe(new Subscription {
+          val subscription = new Subscription {
             override def message(message: String): Unit = cask.Ws.Text(message)
             override def close(): Unit = ws.send(cask.Ws.Close())
-          })
-          cask.WsActor { case cask.Ws.Text(message) => game.receiveMessage(message) }
+          }
+          game.subscribe(subscription)
+          cask.WsActor {
+            case cask.Ws.Text(message) => game.receiveMessage(message)
+            case cask.Ws.ChannelClosed() => game.unsubscribe(subscription)
+          }
         }
   }
 
