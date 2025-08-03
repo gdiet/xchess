@@ -1,29 +1,30 @@
 package xchess.game
 
+import xchess.util.{!!!, interleave}
+
 import scala.collection.immutable.ListMap
 
 case class Game(board: Board, plannedMoves: ListMap[Square, Square], freezeTime: Long)
 
-@annotation.tailrec
 def executeScheduledMoves(game: Game, time: GameTime): Game =
-  executeNextScheduledMove(game, game.plannedMoves.iterator, time) match
-    case None => game // no more moves to execute
-    case Some(newGame) => executeScheduledMoves(newGame, time) // recursively execute next move
-
-@annotation.tailrec
-def executeNextScheduledMove(game: Game, moves: Iterator[(Square, Square)], time: GameTime): Option[Game] =
   import game.*
-  moves.nextOption match
-    case None => None // no more planned moves
-    case Some(from, to) => board.map.get(from) match
-      case None => Some(game.copy(plannedMoves = plannedMoves - from)) // piece not found, remove move
-      case Some(_, frozenUntil) if frozenUntil > time => executeNextScheduledMove(game, moves, time) // piece is frozen, skip this move
-      case Some((piece, _)) => Some(handleMoveCommand(game, piece, from, to, time))
-
-def handleMoveCommand(game: Game, piece: Piece, from: Square, to: Square, gameTime: GameTime): Game =
-  import game.*
-  tryMove(board, piece, from, to) match
-    case None => game.copy(plannedMoves = plannedMoves - from) // move not valid, remove it
-    case Some(target) =>
-      val newBoard = board.copy(map = board.map - from + (target -> (piece.moved, gameTime + freezeTime)))
-      game.copy(board = newBoard, plannedMoves = plannedMoves - from - target) // execute the move
+  val (laterMoves, currentMoves) = plannedMoves.partitionMap { (from, to) =>
+    board.map.get(from) match
+      case None => !!!(Right(None)) // piece not found, move will be removed. should not happen
+      case Some((piece, frozenUntil)) if frozenUntil > time => Left(from -> to) // piece is frozen, skip this move
+      case Some((piece, _)) => Right(Some((piece = piece, from = from, to = to))) // schedule the move
+  }
+  currentMoves.flatten.headOption match
+    case Some(move) =>
+      val whiteFirst = move.piece.isWhite // the player who has scheduled the first move is the one who plays first
+      val (firstMoves, secondMoves) = currentMoves.flatten.partition(_.piece.isWhite == whiteFirst)
+      val movesToExecute = interleave(firstMoves, secondMoves) // interleave the moves of both players
+      val newBoard = movesToExecute.foldLeft(board) { case (board, (piece, from, to)) =>
+        tryMove(board, piece, from, to) match
+          case None => board // move not valid, do not change the board. happens if a planned move is blocked
+          case Some(target) =>
+            board.copy(map = board.map - from + (target -> (piece.moved, time + freezeTime))) // execute the move
+      }
+      copy(board = newBoard, plannedMoves = ListMap.from(laterMoves))
+    case None =>
+      copy(plannedMoves = ListMap.from(laterMoves)) // no moves to execute, filter out invalid moves
