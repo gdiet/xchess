@@ -12,7 +12,7 @@ class GameRegistry {
       games += (gameId -> new GameHandler(this))
       Some(gameId)
   }
-  
+
   def game(gameId: String): Option[GameHandler] = synchronized {
     games.get(gameId)
   }
@@ -25,22 +25,18 @@ trait Subscription extends AutoCloseable {
 class GameHandler(gameRegistry: GameRegistry) {
   private var chat: List[String] = List()
   private var subscriptions: Set[Subscription] = Set()
-  
+
   def subscribe(subscription: Subscription): Unit = synchronized {
-    // Subscribe to the game, e.g., for notifications or updates
-    println("Subscribed to game")
     subscriptions += subscription
+    chat.reverse.foreach(message => subscription.message(s"chat: $message"))
   }
 
   def unsubscribe(subscription: Subscription): Unit = synchronized {
-    // Unsubscribe from the game
-    println("Unsubscribed from game")
     subscriptions -= subscription
   }
-  
+
   def receiveMessage(message: String): Unit = synchronized {
-    // Handle incoming messages for the game
-    println(s"Received message for game: $message")
-    chat = chat :+ message
+    chat = message :: chat.take(4)
+    subscriptions.foreach(_.message(s"chat: $message"))
   }
 }

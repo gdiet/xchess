@@ -1,7 +1,7 @@
 package xchess
 
+import cask.*
 import cask.Response.Data
-import cask.{Request, Response}
 import ujson.{Obj, Value}
 
 import java.io.InputStream
@@ -30,19 +30,19 @@ object Server extends cask.MainRoutes:
 
   // Websockets
   @cask.websocket("/ws/:gameId")
-  def websockets(gameId: String): cask.WebsocketResult = {
+  def websockets(gameId: String): WebsocketResult = {
     games.game(gameId) match
       case None => Response("Game not found", 404)
       case Some(game) =>
-        cask.WsHandler { ws =>
+        WsHandler { ws =>
           val subscription = new Subscription {
-            override def message(message: String): Unit = cask.Ws.Text(message)
-            override def close(): Unit = ws.send(cask.Ws.Close())
+            override def message(message: String): Unit = ws.send(Ws.Text(message))
+            override def close(): Unit = ws.send(Ws.Close())
           }
           game.subscribe(subscription)
-          cask.WsActor {
-            case cask.Ws.Text(message) => game.receiveMessage(message)
-            case cask.Ws.ChannelClosed() => game.unsubscribe(subscription)
+          WsActor {
+            case Ws.Text(message) => game.receiveMessage(message)
+            case Ws.ChannelClosed() => game.unsubscribe(subscription)
           }
         }
   }

@@ -7,6 +7,8 @@
 <pre id="output"></pre>
 
 <script>
+    document.getElementById("output").textContent += "Game chat:\n"
+
     const ws = new WebSocket(`ws://${window.location.host}/ws/17`);
 
     ws.onmessage = (event) => {
