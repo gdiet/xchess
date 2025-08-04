@@ -3,6 +3,7 @@ package xchess
 import cask.*
 import cask.Response.Data
 import ujson.{Obj, Value}
+import xchess.game.{GameRegistry, Subscription}
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}

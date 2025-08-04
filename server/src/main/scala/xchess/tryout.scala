@@ -1,5 +1,7 @@
 package xchess
 
+import xchess.game.GameClock
+
 @main
 def tryout(): Unit =
   val gameClock = GameClock()

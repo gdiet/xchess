@@ -1,6 +1,4 @@
-package xchess
-
-import xchess.game.GameTime
+package xchess.game
 
 class GameClock:
   private var offsetToUnixTime: Long = System.currentTimeMillis()

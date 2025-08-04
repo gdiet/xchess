@@ -1,6 +1,4 @@
-package xchess
-
-import xchess.game.Game
+package xchess.game
 
 class GameRegistry {
   private var games: Map[String, GameHandler] = Map()
