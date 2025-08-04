@@ -25,9 +25,15 @@ trait Subscription extends AutoCloseable {
 }
 
 class GameHandler {
+  private val clock: GameClock = GameClock()
   private var chat: List[String] = List()
   private var subscriptions: Set[Subscription] = Set()
   private var game: Game = Game("standard")
+
+//  private val scheduler = Executors.newScheduledThreadPool(1)
+//  scheduler.schedule(
+//    new Runnable { override def run(): Unit = println("scheduled") }, 3000, java.util.concurrent.TimeUnit.MILLISECONDS
+//  )//.cancel(false)
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
@@ -39,7 +45,14 @@ class GameHandler {
   }
 
   def receiveMessage(message: String): Unit = synchronized {
-    chat = message :: chat.take(4)
-    subscriptions.foreach(_.message(s"chat: $message"))
+    message.split(":", 2) match {
+      case Array("stop") => clock.stop(); println(s"clock stopped at ${clock.time}")
+      case Array("start") => clock.start(); println(s"clock started at ${clock.time}")
+      case Array("move", move) => println(s"move: $move")
+      case Array("chat", message) =>
+        chat = message :: chat.take(4)
+        subscriptions.foreach(_.message(s"chat:$message"))
+      case _ => println(s"WARNING - unknown command: $message")
+    }
   }
 }
