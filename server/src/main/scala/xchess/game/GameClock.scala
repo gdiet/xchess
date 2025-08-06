@@ -4,6 +4,10 @@ class GameClock:
   private var offsetToUnixTime: Long = System.currentTimeMillis()
   private var stoppedAt: Option[Long] = Some(offsetToUnixTime)
 
+  def isStopped: Boolean = synchronized {
+    stoppedAt.isDefined
+  }
+  
   def stop(): Unit =  synchronized {
     if stoppedAt.isEmpty then stoppedAt = Some(System.currentTimeMillis())
   }

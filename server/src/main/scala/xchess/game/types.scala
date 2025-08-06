@@ -35,9 +35,13 @@ opaque type GameTime = Long // in milliseconds, 0 is the start of the game
 object GameTime:
   def apply(value: Long): GameTime = value
   extension (r: GameTime) def value: Long = r
-  extension (r: GameTime) def <=(other: GameTime): Boolean = r.value <= other.value
-  extension (r: GameTime) def > (other: GameTime): Boolean = r.value >  other.value
+// FIXME remove unused lines
+//  extension (r: GameTime) def < (other: GameTime): Boolean = r.value < other.value
+  extension (r: GameTime) def > (other: GameTime): Boolean = r.value > other.value
   extension (r: GameTime) def + (timespan: Long): GameTime = r.value + timespan
+//  extension (r: GameTime) def - (time: GameTime): Long     = r.value - time.value
+//  given Ordering[GameTime] with
+//    def compare(x: GameTime, y: GameTime): Int = x.compareTo(y)
 
 type Square = (col: Col, row: Row)
 object Square:
