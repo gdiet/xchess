@@ -2,13 +2,17 @@ package xchess.game
 
 import xchess.game.GameHandler.Subscription
 
+import java.util.concurrent.Executors
+
 object GameHandler:
   trait Subscription extends AutoCloseable {
     def message(message: String): Unit
   }
 
 class GameHandler {
-  private val clock: GameClock = GameClock()
+  private def numberOfCores = Runtime.getRuntime.availableProcessors()
+  private val scheduler = Executors.newScheduledThreadPool(numberOfCores)
+  private val eventTimer = EventTimer(scheduler, 3000, () => println("event timer tick")) // FIXME
   private var chat: List[String] = List()
   private var subscriptions: Set[Subscription] = Set()
   private var game: Game = Game("standard")
@@ -29,8 +33,8 @@ class GameHandler {
 
   def receiveMessage(message: String): Unit = synchronized {
     message.split(":", 2) match {
-      case Array("stop") => clock.stop(); println(s"clock stopped at ${clock.time}")
-      case Array("start") => clock.start(); println(s"clock started at ${clock.time}")
+      case Array("stop") => eventTimer.stop(); println(s"clock stopped at ${eventTimer.time}")
+      case Array("start") => eventTimer.start(); println(s"clock started at ${eventTimer.time}")
       case Array("move", move) => println(s"move: $move")
       case Array("chat", message) =>
         chat = message :: chat.take(4)
