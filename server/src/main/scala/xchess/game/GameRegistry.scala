@@ -1,7 +1,7 @@
 package xchess.game
 
 class GameRegistry {
-  private var games: Map[String, GameHandler] = Map()
+  private var games: Map[String, GameHandler] = Map("17" -> GameHandler()) // FIXME pre-created game for testing
   
   /** @return None if the game was not created (ID conflict or too many games) */
   def newGame(id: Option[String]): Option[String] = synchronized {

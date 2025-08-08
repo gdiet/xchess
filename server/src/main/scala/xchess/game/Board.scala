@@ -19,15 +19,15 @@ case class Board(size: Square, map: Map[Square, MapEntry]) {
 
 def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board = {
   val lines = boardLayout(name).linesIterator.toSeq
-  val size = (col = Col(lines.head.length), row = Row(lines.length))
+  val size = (col = Col(lines.head.length - 1), row = Row(lines.length - 1))
   val pieces = for {
     (line, y) <- lines.zipWithIndex
     (piece, x) <- line.zipWithIndex
     if piece != '+'
   } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
   // FIXME remove
-  println(size)
-  println(size.string)
+//  println(size)
+//  println(size.string)
   Board(size, pieces.toMap)
 }
 

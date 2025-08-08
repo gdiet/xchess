@@ -18,6 +18,13 @@ class GameHandler {
   private var subscriptions: Set[Subscription] = Set()
   private var game: Game = Game("standard")
 
+  // FIXME remove
+  println(s"size: ${game.board.size}")
+  println(s"size: ${game.board.size.string}")
+  game.board.map.foreach((square, entry) => {
+    println(s"board: ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
+  })
+
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
     subscription.message(s"clock: ${eventTimer.time}")
