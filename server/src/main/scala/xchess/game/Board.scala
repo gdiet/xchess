@@ -25,6 +25,9 @@ def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Bo
     (piece, x) <- line.zipWithIndex
     if piece != '+'
   } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
+  // FIXME remove
+  println(size)
+  println(size.string)
   Board(size, pieces.toMap)
 }
 

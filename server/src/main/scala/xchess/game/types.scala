@@ -45,8 +45,8 @@ object GameTime:
 
 type Square = (col: Col, row: Row)
 object Square:
-  def apply(string: String): Square = (col = string.head - 'A', row = string.tail.toInt - 1)
-  extension (s: Square) def string: String = s"${('A' + s.col).toChar}${s.row + 1}"
+  def apply(string: String): Square = (col = string.head - 'A', row = string.tail.toInt - 1) // FIXME looks incorrect
+  extension (s: Square) def string: String = s"${('A' + s.col - 1).toChar}${s.row}" // FIXME looks incorrect
   extension (s: Square) def +(cols: Int, rows: Int): Square = (s.col + cols, s.row + rows)
 
 type MapEntry = (piece: Piece, frozenUntil: GameTime)

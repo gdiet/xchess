@@ -1,6 +1,7 @@
 package xchess.game
 
 import xchess.game.GameHandler.Subscription
+import xchess.game.Square.*
 
 import java.util.concurrent.Executors
 
@@ -17,13 +18,14 @@ class GameHandler {
   private var subscriptions: Set[Subscription] = Set()
   private var game: Game = Game("standard")
 
-  //  private val scheduler = Executors.newScheduledThreadPool(1)
-  //  scheduler.schedule(
-  //    new Runnable { override def run(): Unit = println("scheduled") }, 3000, java.util.concurrent.TimeUnit.MILLISECONDS
-  //  )//.cancel(false)
-
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
+    subscription.message(s"clock: ${eventTimer.time}")
+    subscription.message(s"size: ${game.board.size.string}")
+    subscription.message(s"freeze: ${game.freezeTime}")
+    game.board.map.foreach((square, entry) => {
+      subscription.message(s"board: ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
+    })
     chat.reverse.foreach(message => subscription.message(s"chat: $message"))
   }
 
