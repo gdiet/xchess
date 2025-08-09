@@ -19,13 +19,13 @@ object Piece:
     case 'p' => 'm' // black pawn moved
     case _   =>  r
 
-opaque type Row = Int // 1 to 8 in standard chess, here 0 to 7 (more for large boards)
+opaque type Row = Int // rank 1 to 8 in standard chess, here 0 to 7 (more for large boards)
 object Row:
   def apply(value: Int): Row = value
   extension (r: Row) def value: Int = r
   extension (r: Row) def - (other: Row): Int = r.value - other.value
 
-opaque type Col = Int // a to h in standard chess, here 0 to 7 (more for large boards)
+opaque type Col = Int // file a to h in standard chess, here 0 to 7 (more for large boards)
 object Col:
   def apply(value: Int): Col = value
   extension (r: Col) def value: Int = r
