@@ -5,12 +5,13 @@ class GameRegistry {
   
   /** @return None if the game was not created (ID conflict or too many games) */
   def newGame(id: Option[String]): Option[String] = synchronized {
-    if id.exists(games.contains) then None // ID conflict
-    else if games.size >= 3 then None // too many games
+    if games.size >= 3 then None // too many games
     else
       val gameId = id.getOrElse(java.util.UUID.randomUUID().toString)
-      games += (gameId -> GameHandler())
-      Some(gameId)
+      if games.contains(gameId) then None // ID conflict
+      else
+        games += (gameId -> GameHandler())
+        Some(gameId)
   }
 
   def game(gameId: String): Option[GameHandler] = synchronized {

@@ -25,7 +25,7 @@ object Server extends cask.MainRoutes:
     val body = ujson.read(ctx.exchange.getInputStream).obj
     games.newGame(body.get("id").flatMap(_.strOpt)) match
       case Some(gameId) =>
-        Response(ujson.Obj("id" -> gameId, "msg" -> "Game created successfully"), 201)
+        Response(ujson.Obj("id" -> gameId), 201)
       case None =>
         Response(ujson.Obj("cause" -> "ID conflict or too many games"), 409)
   }
