@@ -10,7 +10,7 @@ object GameHandler:
     def message(message: String): Unit
   }
 
-class GameHandler {
+class GameHandler(id: String) {
   private def numberOfCores = Runtime.getRuntime.availableProcessors()
   private val scheduler = Executors.newScheduledThreadPool(numberOfCores)
   private val eventTimer = EventTimer(scheduler, 3000, () => println("event timer tick")) // FIXME
@@ -36,13 +36,13 @@ class GameHandler {
 
   def receiveMessage(message: String): Unit = synchronized {
     message.split(":", 2) match {
-      case Array("stop") => eventTimer.stop(); println(s"clock stopped at ${eventTimer.time}")
-      case Array("start") => eventTimer.start(); println(s"clock started at ${eventTimer.time}")
-      case Array("move", move) => println(s"move: $move")
+      case Array("stop") => eventTimer.stop()
+      case Array("start") => eventTimer.start()
+      case Array("plan", move) => println(s"plan: $move") // FIXME implement
       case Array("chat", message) =>
         chat = message :: chat.take(4)
         subscriptions.foreach(_.message(s"chat:$message"))
-      case _ => println(s"WARNING - unknown command: $message")
+      case _ => println(s"WARNING - [$id] unknown command: $message")
     }
   }
 }

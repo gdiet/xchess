@@ -1,7 +1,7 @@
 package xchess.game
 
 class GameRegistry {
-  private var games: Map[String, GameHandler] = Map("17" -> GameHandler()) // FIXME pre-created game for testing
+  private var games: Map[String, GameHandler] = Map("17" -> GameHandler("17")) // TODO pre-created game for testing
   
   /** @return None if the game was not created (ID conflict or too many games) */
   def newGame(id: Option[String]): Option[String] = synchronized {
@@ -10,7 +10,7 @@ class GameRegistry {
       val gameId = id.getOrElse(java.util.UUID.randomUUID().toString)
       if games.contains(gameId) then None // ID conflict
       else
-        games += (gameId -> GameHandler())
+        games += (gameId -> GameHandler(gameId))
         Some(gameId)
   }
 

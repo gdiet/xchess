@@ -23,3 +23,10 @@ Initial messages:
     rows: 8                 // board size
     board: A1 R 3000        // square, piece, freeze time
     chat: Hello chess       // chat message
+
+Client to server:
+
+    chat: Hello chess       // chat message
+    plan: A1 B2             // plan move from A1 to B2
+    stop                    // stop the game clock
+    start                   // start the game clock
