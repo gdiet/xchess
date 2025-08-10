@@ -8,7 +8,7 @@ case class Game(board: Board, plannedMoves: ListMap[Square, Square] = ListMap.em
 object Game:
   def apply(boardLayout: String): Game = Game(createBoard(boardLayout))
 
-def executeScheduledMoves(game: Game, time: GameTime): Game =
+def executeScheduledMoves(game: Game, time: GameTime): (Game, Seq[(Square, Square)]) =
   import game.*
   val (laterMoves, currentMoves) = plannedMoves.partitionMap { (from, to) =>
     board.map.get(from) match
@@ -21,12 +21,14 @@ def executeScheduledMoves(game: Game, time: GameTime): Game =
       val whiteFirst = move.piece.isWhite // the player who has scheduled the first move is the one who plays first
       val (firstMoves, secondMoves) = currentMoves.flatten.partition(_.piece.isWhite == whiteFirst)
       val movesToExecute = interleave(firstMoves, secondMoves) // interleave the moves of both players
+      var movesExecuted: Seq[(Square, Square)] = Seq()
       val newBoard = movesToExecute.foldLeft(board) { case (board, (piece, from, to)) =>
         tryMove(board, piece, from, to) match
           case None => board // move not valid, do not change the board. happens if a planned move is blocked
           case Some(target) =>
+            movesExecuted = movesExecuted :+ (from -> target)
             board.copy(map = board.map - from + (target -> (piece.moved, time + freezeTime))) // execute the move
       }
-      copy(board = newBoard, plannedMoves = ListMap.from(laterMoves))
+      copy(board = newBoard, plannedMoves = ListMap.from(laterMoves)) -> movesExecuted
     case None =>
-      copy(plannedMoves = ListMap.from(laterMoves)) // no moves to execute, filter out invalid moves
+      copy(plannedMoves = ListMap.from(laterMoves)) -> Seq() // no moves to execute, filter out invalid moves
