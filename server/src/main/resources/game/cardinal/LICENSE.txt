@@ -1,0 +1,10 @@
+The chess pieces in this directory are the "cardinal" set by sadsnake1,
+licensed under CC BY-NC-SA 4.0 (Attribution-NonCommercial-ShareAlike 4.0 International)
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+public/piece/cardinal	sadsnake1
+
+See:
+https://github.com/lichess-org/lila/tree/master/public/piece/cardinal
+https://github.com/lichess-org/lila/blob/88d184abe842f3d963b058d23af26e17ada63664/COPYING.md
+https://github.com/lichess-org/lila/blob/master/COPYING.md

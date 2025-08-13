@@ -10,7 +10,7 @@ object GameHandler:
     def message(message: String): Unit
   }
 
-class GameHandler(id: String) {
+class GameHandler(id: String):
   private def numberOfCores = Runtime.getRuntime.availableProcessors()
   private val scheduler = Executors.newScheduledThreadPool(numberOfCores)
   private val eventTimer = EventTimer(scheduler, 3000, () => advance())
@@ -18,7 +18,7 @@ class GameHandler(id: String) {
   private var subscriptions: Set[Subscription] = Set()
   private var game: Game = Game("standard")
 
-  def advance(): Unit = synchronized {
+  private def advance(): Unit = synchronized {
     val time = eventTimer.time
     val (newGame, moves) = executeScheduledMoves(game, time)
     game = newGame
@@ -61,4 +61,3 @@ class GameHandler(id: String) {
       case _ => println(s"WARNING - [$id] unknown command: $message")
     }
   }
-}

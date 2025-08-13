@@ -8,7 +8,6 @@ import xchess.game.GameRegistry
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
-import scala.annotation.tailrec
 
 object Server extends cask.MainRoutes:
   override def port = 7070
@@ -58,12 +57,11 @@ object Server extends cask.MainRoutes:
   def rootRoute(): Response[Data] =
     serveStaticFile(Seq())
 
-  @tailrec
   private def serveStaticFile(path: Seq[String]): Response[Data] =
     val filePath = path.foldLeft(webRoot)(_.resolve(_))
-    if Files.isDirectory(filePath) then
-      serveStaticFile(path :+ "index.html")
-    else if Files.isRegularFile(filePath) then
+    if Files.isDirectory(filePath) then {
+      Response("", 301, Seq("Location" -> path.mkString("/", "/", "/index.html")), Nil)
+    } else if Files.isRegularFile(filePath) then
       val contentType = Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
       Response(java.nio.file.Files.newInputStream(filePath): Data, 200, Seq("Content-Type" -> contentType))
     else

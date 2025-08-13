@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>xChess</title>
+    <link rel="icon" type="image/png" href="alpha/bK.svg"/>
+
+    <style>
+        body { background-color: grey; display: flex; flex-direction: column; }
+        html, body { height: 100% }
+    </style>
+</head>
+<!-- For release, use the minified library.
+  <script src="pixi/pixi.min.js"></script>
+-->
+<script src="pixi/pixi.js"></script>
+<body>
+<script type="module" src="xchess.js"></script>
+<p>xChess (c) Georg --- <a href="./index.html" id="backLink">Back to settings ...</a></p>
+<div id="gameContainer" style="flex: 1;"></div>
+<p>footer</p>
+<script type='text/javascript'>
+    const name = new URLSearchParams(window.location.search).get("name") ?? "game"
+    document.getElementById("backLink").href=`./index.html?name=${name}`
+</script>
+</body>
+</html>
