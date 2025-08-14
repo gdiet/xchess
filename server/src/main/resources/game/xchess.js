@@ -12,7 +12,26 @@ function setup() {
   tech.ws.onmessage = receiveSetupMessages(ches, tech)
 }
 
-function receiveSetupMessages(ches, tech) { return (event) => {
+/**
+ * @typedef {Object} ChessState
+ * @property {boolean} white
+ * @property {number=} cols
+ * @property {number=} rows
+ * @property {{start: number|null, offset: number|null}=} clock
+ * @property {number=} freeze
+ */
+
+/**
+ * @typedef {Object} TechState
+ * @property {WebSocket} ws
+ */
+
+/**
+ * @param {ChessState} ches
+ * @param {TechState} tech
+ * @returns {(event: MessageEvent<string>) => void}
+ */
+function receiveSetupMessages(ches, tech) { return event => {
   const [command, arg1, arg2] = event.data.split(" ")
   console.log(`Setup: ${command} ${arg1} ${arg2}`)
   switch (command) {
@@ -41,11 +60,21 @@ function receiveSetupMessages(ches, tech) { return (event) => {
   }
 }}
 
+/**
+ * @param {ChessState} ches
+ * @param {TechState} tech
+ * @returns {void}
+ */
 function initializeGraphics(ches, tech) {
   console.log(`- initialize graphics -`)
 }
 
-function receiveGameMessages(ches, tech) { return (event) => {
+/**
+ * @param {ChessState} ches
+ * @param {TechState} tech
+ * @returns {(event: MessageEvent<string>) => void}
+ */
+function receiveGameMessages(ches, tech) { return event => {
   console.log(`Game: ${event.data}`)
 }}
 
