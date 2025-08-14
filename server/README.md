@@ -15,17 +15,20 @@
     => Websocket connection
     => 404 Not Found => Game not found
 
-Messages on connection:
+Setup messages:
 
-    freeze: 3000            // milliseconds
-    clock: 0 stopped        // milliseconds, or running
-    cols: 8                 // board size
-    rows: 8                 // board size
+    boardsize <cols> <rows>                 // board size, default 8x8
+    clock <milliseconds> <stopped|running>  // also a game message
+    freeze <milliseconds>                   // also a game message
 
-    board: A1 R 3000        // square, piece, freeze time
-    plan: A2 A4             // from, to
-    chat: Hello chess       // chat message
-    winner: white           // game winner, when the first king has already been captured
+Game messages:
+
+    clock <milliseconds> <stopped|running>
+    freeze <milliseconds>
+    put Q D1 3000          // square, piece, freeze time
+    plan A2 A4             // from, to
+    chat Hello chess       // chat message
+    winner white           // game winner, when the first king has already been captured
 
 Server to client:
 

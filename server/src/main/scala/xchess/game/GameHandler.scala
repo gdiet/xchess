@@ -28,10 +28,9 @@ class GameHandler(id: String):
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
-    subscription.message(s"freeze: ${game.freezeTime}")
-    subscription.message(s"clock: ${eventTimer.time} ${if eventTimer.isStopped then "stopped" else "running"}")
-    subscription.message(s"cols: ${game.board.size.col.value + 1}")
-    subscription.message(s"rows: ${game.board.size.row.value + 1}")
+    subscription.message(s"boardsize ${game.board.size.col.value + 1} ${game.board.size.row.value + 1}")
+    subscription.message(s"freeze ${game.freezeTime}")
+    subscription.message(s"clock ${eventTimer.time} ${if eventTimer.isStopped then "stopped" else "running"}")
     game.board.map.foreach((square, entry) => {
       subscription.message(s"board: ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
     })

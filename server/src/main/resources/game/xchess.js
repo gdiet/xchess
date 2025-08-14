@@ -1,17 +1,53 @@
 // @ts-check
 setup()
 
-async function setup() {
+function setup() {
   const loc  = window.location
   const name = new URLSearchParams(loc.search).get("name") || "test"
-  const ches = { white: new URLSearchParams(loc.search).get("color") == "white" }
+  const ches = { white: new URLSearchParams(loc.search).get("color") !== "black" }
   const tech = { ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`) }
-  tech.ws.onopen  = _ => console.log(`Websocket opened.`)
-  tech.ws.onerror = _ => { console.log(`Websocket error.`); location.href = "notfound.html" + loc.search }
-  tech.ws.onclose = _ => console.log(`Websocket closed.`)
-  tech.ws.onmessage = (event) => console.log(event.data)
-  console.log(window.location)
+  tech.ws.onopen  = _ => console.log(`- websocket opened -`)
+  tech.ws.onerror = _ => { console.log(`- websocket error -`); location.href = "notfound.html" + loc.search }
+  tech.ws.onclose = _ => console.log(`- websocket closed -`)
+  tech.ws.onmessage = receiveSetupMessages(ches, tech)
 }
+
+function receiveSetupMessages(ches, tech) { return (event) => {
+  const [command, arg1, arg2] = event.data.split(" ")
+  console.log(`Setup: ${command} ${arg1} ${arg2}`)
+  switch (command) {
+    case "boardsize": // boardsize: <cols> <rows>
+      ches.cols = parseInt(arg1)
+      ches.rows = parseInt(arg2)
+      break
+    case "clock": // clock: <milliseconds> <stopped|running>
+      const running = arg2 === "running"
+      ches.clock = {
+        start: running ? Date.now() - parseInt(arg1) : null,
+        offset: running ? null : parseInt(arg1)
+      }
+      break
+    case "freeze": // freeze: <milliseconds>
+      ches.freeze = parseInt(arg1)
+      break
+    default:
+      console.warn(`Unknown setup command: ${command}`)
+  }
+  if (ches.cols && ches.clock && ches.freeze) {
+    console.log(`- setup complete -`)
+    console.debug(`Setup data: ${JSON.stringify(ches)}`)
+    initializeGraphics(ches, tech)
+    tech.ws.onmessage = receiveGameMessages(ches, tech)
+  }
+}}
+
+function initializeGraphics(ches, tech) {
+  console.log(`- initialize graphics -`)
+}
+
+function receiveGameMessages(ches, tech) { return (event) => {
+  console.log(`Game: ${event.data}`)
+}}
 
 // async function init() {
 //   // Create a new application
