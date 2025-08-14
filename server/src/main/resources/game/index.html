@@ -1,8 +1,10 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+
     <title>xChess</title>
     <link rel="icon" type="image/png" href="alpha/bK.svg"/>
 
@@ -11,15 +13,16 @@
         html, body { height: 100% }
         #gameContainer { flex: 1; background-color: lightgrey }
     </style>
+
+    <!-- For release, use the minified library pixi/pixi.min.js -->
+    <script src="pixi/pixi.js" defer></script>
+    <script src="xchess.js" defer></script>
 </head>
-<!-- For release, use the minified library.
-  <script src="pixi/pixi.min.js"></script>
--->
-<script src="pixi/pixi.js" defer></script>
-<script src="xchess.js"    defer></script>
+
 <body>
-<p>xChess (c) Georg --- <a href="../index.html">Back to settings ...</a></p>
-<div id="gameContainer">Ooops, the game board should be here!?!</div>
-<p>footer</p>
+    <p>xChess (c) Georg --- <a href="../index.html">Back to settings ...</a></p>
+    <div id="gameContainer">Ooops, the game board should be here!?!</div>
+    <p>footer</p>
 </body>
+
 </html>
