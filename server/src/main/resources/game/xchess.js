@@ -4,6 +4,8 @@
  * @property {boolean} white
  * @property {{cols: number, rows: number}} size
  * @property {{start: number|null, offset: number|null}} clock
+ * If start is set, the clock is running. Indicates the time when the clock started running.
+ * If offset is set, the clock is stopped. Indicates the time that has passed in the game.
  * @property {number} freeze
  */
 
