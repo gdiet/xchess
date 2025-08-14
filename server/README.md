@@ -21,6 +21,7 @@ Messages on connection:
     clock: 0 stopped        // milliseconds, or running
     cols: 8                 // board size
     rows: 8                 // board size
+
     board: A1 R 3000        // square, piece, freeze time
     plan: A2 A4             // from, to
     chat: Hello chess       // chat message
