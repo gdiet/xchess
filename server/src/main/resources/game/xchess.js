@@ -3,8 +3,8 @@ setup()
 
 async function setup() {
   const loc  = window.location
-  const name = new URLSearchParams(loc.search).get("name")
-  const ches = { color: new URLSearchParams(loc.search).get("color") }
+  const name = new URLSearchParams(loc.search).get("name") || "test"
+  const ches = { white: new URLSearchParams(loc.search).get("color") == "white" }
   const tech = { ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`) }
   tech.ws.onopen  = _ => console.log(`Websocket opened.`)
   tech.ws.onerror = _ => { console.log(`Websocket error.`) } // location.href = "/" }

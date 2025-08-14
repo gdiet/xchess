@@ -50,19 +50,25 @@ object Server extends cask.MainRoutes:
 
   // Web routes
   @cask.get("/:path", subpath = true)
-  def webRoutes(ctx: cask.Request, path: Seq[String]): Response[Data] =
-    serveStaticFile(path ++ ctx.remainingPathSegments)
+  def webRoutes(ctx: cask.Request, path: Seq[String], queryParams: QueryParams): Response[Data] =
+    serveStaticFile(path ++ ctx.remainingPathSegments, queryParams)
 
   @cask.get("")
-  def rootRoute(): Response[Data] =
-    serveStaticFile(Seq())
+  def rootRoute(queryParams: QueryParams): Response[Data] =
+    serveStaticFile(Seq(), queryParams)
 
-  private def serveStaticFile(path: Seq[String]): Response[Data] =
+  private def serveStaticFile(path: Seq[String], queryParams: QueryParams): Response[Data] =
     val filePath = path.foldLeft(webRoot)(_.resolve(_))
     if Files.isDirectory(filePath) then {
-      Response("", 301, Seq("Location" -> path.mkString("/", "/", "/index.html")), Nil)
+      val paramPairs  = queryParams.value.flatMap((k,s) => s.map(v => s"$k=$v"))
+      val paramString = mkString(paramPairs, "?", "&", "")
+      val pathString  = mkString(path, "/", "/", "/index.html")
+      Response("", 301, Seq("Location" -> (pathString + paramString)), Nil)
     } else if Files.isRegularFile(filePath) then
       val contentType = Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
       Response(java.nio.file.Files.newInputStream(filePath): Data, 200, Seq("Content-Type" -> contentType))
     else
       Response("": Data, 404)
+
+  private def mkString(items: Iterable[String], start: String, mid: String, end: String): String =
+    if items.isEmpty then end else items.mkString(start, mid, end)
