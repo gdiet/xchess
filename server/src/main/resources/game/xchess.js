@@ -1,10 +1,28 @@
 // @ts-check
+/**
+ * @typedef {Object} Ches
+ * @property {boolean} white
+ * @property {{cols: number, rows: number}} size
+ * @property {{start: number|null, offset: number|null}} clock
+ * @property {number} freeze
+ */
+
+/**
+ * @typedef {Object} Tech
+ * @property {WebSocket} ws
+ */
+
 setup()
 
 function setup() {
   const loc  = window.location
   const name = new URLSearchParams(loc.search).get("name") || "test"
-  const ches = { white: new URLSearchParams(loc.search).get("color") !== "black" }
+  const ches = { 
+    white: new URLSearchParams(loc.search).get("color") !== "black",
+    size: { cols: -1, rows: -1 },
+    clock: { start: null, offset: null },
+    freeze: -1
+  }
   const tech = { ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`) }
   tech.ws.onopen  = _ => console.log(`- websocket opened -`)
   tech.ws.onerror = _ => { console.log(`- websocket error -`); location.href = "notfound.html" + loc.search }
@@ -13,22 +31,8 @@ function setup() {
 }
 
 /**
- * @typedef {Object} ChessState
- * @property {boolean} white
- * @property {number=} cols
- * @property {number=} rows
- * @property {{start: number|null, offset: number|null}=} clock
- * @property {number=} freeze
- */
-
-/**
- * @typedef {Object} TechState
- * @property {WebSocket} ws
- */
-
-/**
- * @param {ChessState} ches
- * @param {TechState} tech
+ * @param {Ches} ches
+ * @param {Tech} tech
  * @returns {(event: MessageEvent<string>) => void}
  */
 function receiveSetupMessages(ches, tech) { return event => {
@@ -36,8 +40,8 @@ function receiveSetupMessages(ches, tech) { return event => {
   console.log(`Setup: ${command} ${arg1} ${arg2}`)
   switch (command) {
     case "boardsize": // boardsize: <cols> <rows>
-      ches.cols = parseInt(arg1)
-      ches.rows = parseInt(arg2)
+      ches.size.cols = parseInt(arg1)
+      ches.size.rows = parseInt(arg2)
       break
     case "clock": // clock: <milliseconds> <stopped|running>
       const running = arg2 === "running"
@@ -52,7 +56,7 @@ function receiveSetupMessages(ches, tech) { return event => {
     default:
       console.warn(`Unknown setup command: ${command}`)
   }
-  if (ches.cols && ches.clock && ches.freeze) {
+  if (ches.size.cols > 0 && ches.size.rows > 0 && (ches.clock.offset != null || ches.clock.start != null) && ches.freeze >= 0) {
     console.log(`- setup complete -`)
     console.debug(`Setup data: ${JSON.stringify(ches)}`)
     initializeGraphics(ches, tech)
@@ -61,8 +65,8 @@ function receiveSetupMessages(ches, tech) { return event => {
 }}
 
 /**
- * @param {ChessState} ches
- * @param {TechState} tech
+ * @param {Ches} ches
+ * @param {Tech} tech
  * @returns {void}
  */
 function initializeGraphics(ches, tech) {
@@ -70,8 +74,8 @@ function initializeGraphics(ches, tech) {
 }
 
 /**
- * @param {ChessState} ches
- * @param {TechState} tech
+ * @param {Ches} ches
+ * @param {Tech} tech
  * @returns {(event: MessageEvent<string>) => void}
  */
 function receiveGameMessages(ches, tech) { return event => {
