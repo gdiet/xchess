@@ -7,7 +7,7 @@ async function setup() {
   const ches = { white: new URLSearchParams(loc.search).get("color") == "white" }
   const tech = { ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`) }
   tech.ws.onopen  = _ => console.log(`Websocket opened.`)
-  tech.ws.onerror = _ => { console.log(`Websocket error.`) } // location.href = "/" }
+  tech.ws.onerror = _ => { console.log(`Websocket error.`); location.href = "notfound.html" + loc.search }
   tech.ws.onclose = _ => console.log(`Websocket closed.`)
   tech.ws.onmessage = (event) => console.log(event.data)
   console.log(window.location)
