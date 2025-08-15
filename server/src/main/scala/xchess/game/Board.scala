@@ -7,12 +7,69 @@ case class Board(size: Square, map: Map[Square, MapEntry]):
   // FIXME unused?
   def executeMove(from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] =
     map.get(from).flatMap { case (piece, _) =>
-      tryMove(this, piece, from, to).flatMap(target =>
+      tryMove(piece, from, to).flatMap(target =>
         map.get(target) match
           // piece of the same color at target, can not move there
           case Some((targetPiece, targetFreezeUntil)) if targetPiece.isWhite == piece.isWhite => None
           case _ => Some(copy(map = map - from + (target -> (piece, freezeUntil))) -> target)
       )
+    }
+
+  /** @return the target square if the move might be valid, None if not.
+   *          "Might be valid": On the target square might be a piece of the same color.
+   *          Does not check whether moves are beyond borders of the board. */
+  def tryMove(piece: Piece, from: Square, to: Square): Option[Square] =
+    val rows = to.row - from.row // difference in rows (vertical movement, e.g. 1 -> 2)
+    val cols = to.col - from.col // difference in cols (horizontal movement, e.g. a -> b)
+
+    def pawnMoveOneLogic: Option[Square] =
+      if Math.abs(rows) != 1 then None // must move exactly one row
+      else if rows < 0 == piece.isWhite then None // must move in the right direction
+      else if Math.abs(cols) > 1 then None // must not move more than one col
+      else if cols == 0 && map.contains(to) then None // must not capture a piece on the same col
+      else if Math.abs(cols) == 1 && !map.contains(to) then None // must capture a piece if moving diagonally
+      else Some(to) // yay
+
+    /** @return the first occupied square in the direction of the move excluding the target square,
+     *          or None if there is no such square. */
+    def firstOccupiedSquare: Option[Square] =
+      val rowStep = scala.math.signum(rows)
+      val colStep = scala.math.signum(cols)
+
+      @annotation.tailrec
+      def startingAt(square: Square): Option[Square] =
+        if square == to then None // don't include the target square
+        else if map.contains(square) then Some(square) // found a piece
+        else startingAt(square + (colStep, rowStep)) // continue searching
+
+      startingAt(from + (colStep, rowStep))
+
+    piece.value.toUpper match {
+      case 'K' => // King move logic
+        if Math.abs(rows) > 1 || Math.abs(cols) > 1 then None // can not move more than one square in any direction
+        else Some(to)
+      case 'Q' => // Queen move logic
+        if Math.abs(rows) != Math.abs(cols) && rows != 0 && cols != 0 then None // must move in a straight line or diagonally
+        else firstOccupiedSquare.orElse(Some(to))
+      case 'B' => // Bishop move logic
+        if Math.abs(rows) != Math.abs(cols) then None // must move diagonally
+        else firstOccupiedSquare.orElse(Some(to))
+      case 'N' => // Knight move logic
+        if Math.abs(rows) * Math.abs(cols) != 2 then None // must move in an L-shape
+        else Some(to)
+      case 'R' => // Rook move logic
+        if rows != 0 && cols != 0 then None // must move in a straight line
+        else firstOccupiedSquare.orElse(Some(to))
+      case 'P' => // Pawn not moved logic
+        if Math.abs(rows) <= 1 then pawnMoveOneLogic
+        else if Math.abs(rows) > 2 then None // can not move more than two rows
+        else if cols != 0 then None // can not move horizontally when advancing two rows
+        else if map.contains(to) then None // can not capture forward
+        else if firstOccupiedSquare.isDefined then None // can not jump over pieces
+        else Some(to)
+      case 'M' => // Pawn already moved logic
+        pawnMoveOneLogic
+      case _ => throw new IllegalArgumentException(s"Unknown piece type: $piece")
     }
 
   override def toString: String =
@@ -62,59 +119,3 @@ object Board:
          |++++++++
          |pppppppp
          |rnbqkbnr""".stripMargin
-
-/** @return the target square if the move might be valid, None if not.
- *          "Might be valid": On the target square might be a piece of the same color.
- *          Does not check whether moves are beyond borders of the board. */
-def tryMove(board: Board, piece: Piece, from: Square, to: Square): Option[Square] = {
-  val rows = to.row - from.row // difference in rows (vertical movement, e.g. 1 -> 2)
-  val cols = to.col - from.col // difference in cols (horizontal movement, e.g. a -> b)
-
-  def pawnMoveOneLogic: Option[Square] =
-    if Math.abs(rows) != 1 then None // must move exactly one row
-    else if rows < 0 == piece.isWhite then None // must move in the right direction
-    else if Math.abs(cols) > 1 then None // must not move more than one col
-    else if cols == 0 && board.map.contains(to) then None // must not capture a piece on the same col
-    else if Math.abs(cols) == 1 && !board.map.contains(to) then None // must capture a piece if moving diagonally
-    else Some(to) // yay
-
-  /** @return the first occupied square in the direction of the move excluding the target square,
-   *          or None if there is no such square. */
-  def firstOccupiedSquare: Option[Square] =
-    val rowStep = scala.math.signum(rows)
-    val colStep = scala.math.signum(cols)
-    @annotation.tailrec
-    def startingAt(square: Square): Option[Square] =
-      if square == to then None // don't include the target square
-      else if board.map.contains(square) then Some(square) // found a piece
-      else startingAt(square + (colStep, rowStep)) // continue searching
-    startingAt(from + (colStep, rowStep))
-
-  piece.value.toUpper match {
-    case 'K' => // King move logic
-      if Math.abs(rows) > 1 || Math.abs(cols) > 1 then None // can not move more than one square in any direction
-      else Some(to)
-    case 'Q' => // Queen move logic
-      if Math.abs(rows) != Math.abs(cols) && rows != 0 && cols != 0 then None // must move in a straight line or diagonally
-      else firstOccupiedSquare.orElse(Some(to))
-    case 'B' => // Bishop move logic
-      if Math.abs(rows) != Math.abs(cols) then None // must move diagonally
-      else firstOccupiedSquare.orElse(Some(to))
-    case 'N' => // Knight move logic
-      if Math.abs(rows) * Math.abs(cols) != 2 then None // must move in an L-shape
-      else Some(to)
-    case 'R' => // Rook move logic
-      if rows != 0 && cols != 0 then None // must move in a straight line
-      else firstOccupiedSquare.orElse(Some(to))
-    case 'P' => // Pawn not moved logic
-      if Math.abs(rows) <= 1 then pawnMoveOneLogic
-      else if Math.abs(rows) > 2 then None // can not move more than two rows
-      else if cols != 0 then None // can not move horizontally when advancing two rows
-      else if board.map.contains(to) then None // can not capture forward
-      else if firstOccupiedSquare.isDefined then None // can not jump over pieces
-      else Some(to)
-    case 'M' => // Pawn already moved logic
-      pawnMoveOneLogic
-    case _   => throw new IllegalArgumentException(s"Unknown piece type: $piece")
-  }
-}

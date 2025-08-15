@@ -23,7 +23,7 @@ def executeScheduledMoves(game: Game, time: GameTime): (Game, Seq[(Square, Squar
       val movesToExecute = interleave(firstMoves, secondMoves) // interleave the moves of both players
       var movesExecuted: Seq[(Square, Square)] = Seq()
       val newBoard = movesToExecute.foldLeft(board) { case (board, (piece, from, to)) =>
-        tryMove(board, piece, from, to) match
+        board.tryMove(piece, from, to) match
           case None => board // move not valid, do not change the board. happens if a planned move is blocked
           case Some(target) =>
             movesExecuted = movesExecuted :+ (from -> target)
