@@ -2,31 +2,29 @@ package xchess.game
 
 import xchess.game.Square.*
 
-case class Board(size: Square, map: Map[Square, MapEntry]) {
-  override def toString: String = {
-    val rows = for (r <- (0 until size.row.value).reverse) yield {
-      val cols = for (c <- 0 until size.col.value) yield {
+case class Board(size: Square, map: Map[Square, MapEntry]):
+  override def toString: String =
+    val rows = for (r <- (0 until size.row.value).reverse) yield
+      val cols = for (c <- 0 until size.col.value) yield
         map.get((Col(c), Row(r))) match {
           case Some((piece, _)) => piece.value
           case None => '+'
         }
-      }
       cols.mkString("  ")
-    }
     rows.mkString("\n", "\n", "\n")
-  }
-}
 
-def createBoard(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board = {
-  val lines = boardLayout(name).linesIterator.toSeq
-  val size = (col = Col(lines.head.length - 1), row = Row(lines.length - 1))
-  val pieces = for {
-    (line, y) <- lines.zipWithIndex
-    (piece, x) <- line.zipWithIndex
-    if piece != '+'
-  } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
-  Board(size, pieces.toMap)
-}
+
+object Board:
+
+  def apply(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board =
+    val lines = boardLayout(name).linesIterator.toSeq
+    val size = (col = Col(lines.head.length - 1), row = Row(lines.length - 1))
+    val pieces = for {
+      (line, y) <- lines.zipWithIndex
+      (piece, x) <- line.zipWithIndex
+      if piece != '+'
+    } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
+    Board(size, pieces.toMap)
 
 def executeMove(board: Board, from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] = {
   board.map.get(from).flatMap { case (piece, _) =>

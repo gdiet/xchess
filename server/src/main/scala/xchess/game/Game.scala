@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 
 case class Game(board: Board, plannedMoves: ListMap[Square, Square] = ListMap.empty, freezeTime: Long = 3000)
 object Game:
-  def apply(boardLayout: String): Game = Game(createBoard(boardLayout))
+  def apply(boardLayout: String): Game = Game(Board(boardLayout))
 
 def executeScheduledMoves(game: Game, time: GameTime): (Game, Seq[(Square, Square)]) =
   import game.*

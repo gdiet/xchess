@@ -16,7 +16,7 @@ def tryout(): Unit = {
     )
   implicit val boardRW: ReadWriter[Board] = macroRW[Board]
 //  implicit val gameRW: ReadWriter[Game] = macroRW[Game]
-  val board = createBoard("standard")
+  val board = Board("standard")
 //  println(write(board))
   val game = Game(board)
   val moves = game.plannedMoves + (Square("B2") -> Square("B3"))
