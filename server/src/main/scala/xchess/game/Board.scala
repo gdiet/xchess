@@ -3,6 +3,18 @@ package xchess.game
 import xchess.game.Square.*
 
 case class Board(size: Square, map: Map[Square, MapEntry]):
+
+  // FIXME unused?
+  def executeMove(from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] =
+    map.get(from).flatMap { case (piece, _) =>
+      tryMove(this, piece, from, to).flatMap(target =>
+        map.get(target) match
+          // piece of the same color at target, can not move there
+          case Some((targetPiece, targetFreezeUntil)) if targetPiece.isWhite == piece.isWhite => None
+          case _ => Some(copy(map = map - from + (target -> (piece, freezeUntil))) -> target)
+      )
+    }
+
   override def toString: String =
     val rows = for (r <- (0 until size.row.value).reverse) yield
       val cols = for (c <- 0 until size.col.value) yield
@@ -25,19 +37,6 @@ object Board:
       if piece != '+'
     } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
     Board(size, pieces.toMap)
-
-def executeMove(board: Board, from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] = {
-  board.map.get(from).flatMap { case (piece, _) =>
-    tryMove(board, piece, from, to).flatMap(target =>
-      board.map.get(target) match {
-        case Some((targetPiece, targetFreezeUntil)) if targetPiece.isWhite == piece.isWhite =>
-          None // piece of the same color at target, can not move there
-        case _ =>
-          Some(board.copy(map = board.map - from + (target -> (piece, freezeUntil))) -> target)
-      }
-    )
-  }
-}
 
 /** @return the target square if the move might be valid, None if not.
  *          "Might be valid": On the target square might be a piece of the same color.
