@@ -29,14 +29,39 @@ case class Board(size: Square, map: Map[Square, MapEntry]):
 object Board:
 
   def apply(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board =
-    val lines = boardLayout(name).linesIterator.toSeq
+    val lines = layout(name).linesIterator.toSeq
     val size = (col = Col(lines.head.length - 1), row = Row(lines.length - 1))
     val pieces = for {
       (line, y) <- lines.zipWithIndex
       (piece, x) <- line.zipWithIndex
       if piece != '+'
     } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
-    Board(size, pieces.toMap)
+    new Board(size, pieces.toMap)
+
+  private def layout(name: String): String = name match
+    case "large" =>
+      """|RRNNBBQKQBBNNRR
+         |RRNNBBQQQBBNNRR
+         |PPPPPPPPPPPPPPP
+         |PPPPPPPPPPPPPPP
+         |+++++++++++++++
+         |+++++++++++++++
+         |+++++++++++++++
+         |+++++++++++++++
+         |+++++++++++++++
+         |ppppppppppppppp
+         |ppppppppppppppp
+         |rrnnbbqqqbbnnrr
+         |rrnnbbqkqbbnnrr""".stripMargin
+    case _ =>
+      """|RNBQKBNR
+         |PPPPPPPP
+         |++++++++
+         |++++++++
+         |++++++++
+         |++++++++
+         |pppppppp
+         |rnbqkbnr""".stripMargin
 
 /** @return the target square if the move might be valid, None if not.
  *          "Might be valid": On the target square might be a piece of the same color.
@@ -92,31 +117,4 @@ def tryMove(board: Board, piece: Piece, from: Square, to: Square): Option[Square
       pawnMoveOneLogic
     case _   => throw new IllegalArgumentException(s"Unknown piece type: $piece")
   }
-}
-
-private def boardLayout(name: String): String = name match {
-  case "large" =>
-   """|RRNNBBQKQBBNNRR
-      |RRNNBBQQQBBNNRR
-      |PPPPPPPPPPPPPPP
-      |PPPPPPPPPPPPPPP
-      |+++++++++++++++
-      |+++++++++++++++
-      |+++++++++++++++
-      |+++++++++++++++
-      |+++++++++++++++
-      |ppppppppppppppp
-      |ppppppppppppppp
-      |rrnnbbqqqbbnnrr
-      |rrnnbbqkqbbnnrr""".stripMargin
-
-  case _ =>
-   """|RNBQKBNR
-      |PPPPPPPP
-      |++++++++
-      |++++++++
-      |++++++++
-      |++++++++
-      |pppppppp
-      |rnbqkbnr""".stripMargin
 }
