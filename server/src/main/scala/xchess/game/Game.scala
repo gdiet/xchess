@@ -22,12 +22,12 @@ def executeScheduledMoves(game: Game, time: GameTime): (Game, Seq[(Square, Squar
       val (firstMoves, secondMoves) = currentMoves.flatten.partition(_.piece.isWhite == whiteFirst)
       val movesToExecute = interleave(firstMoves, secondMoves) // interleave the moves of both players
       var movesExecuted: Seq[(Square, Square)] = Seq()
-      val newBoard = movesToExecute.foldLeft(board) { case (board, (piece, from, to)) =>
-        board.tryMove(piece, from, to) match
-          case None => board // move not valid, do not change the board. happens if a planned move is blocked
-          case Some(target) =>
+      val newBoard = movesToExecute.foldLeft(board) { case (currentBoard, (piece, from, to)) =>
+        currentBoard.executeMove(from, to, time + freezeTime) match
+          case None => currentBoard // move not valid, do not change the board. happens if a planned move is blocked
+          case Some((newBoard, target)) =>
             movesExecuted = movesExecuted :+ (from -> target)
-            board.copy(map = board.map - from + (target -> (piece.moved, time + freezeTime))) // execute the move
+            newBoard
       }
       copy(board = newBoard, plannedMoves = ListMap.from(laterMoves)) -> movesExecuted
     case None =>

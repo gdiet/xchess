@@ -4,21 +4,23 @@ import xchess.game.Square.*
 
 case class Board(size: Square, map: Map[Square, MapEntry]):
 
-  // FIXME unused?
   def executeMove(from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] =
     map.get(from).flatMap { case (piece, _) =>
       tryMove(piece, from, to).flatMap(target =>
         map.get(target) match
-          // piece of the same color at target, can not move there
-          case Some((targetPiece, targetFreezeUntil)) if targetPiece.isWhite == piece.isWhite => None
-          case _ => Some(copy(map = map - from + (target -> (piece, freezeUntil))) -> target)
+          case Some((targetPiece, targetFreezeUntil)) if targetPiece.isWhite == piece.isWhite =>
+            // piece of the same color at target, can not move there
+            None
+          case _ =>
+            // FIXME handle pawn promotion
+            Some(copy(map = map - from + (target -> (piece, freezeUntil))) -> target)
       )
     }
 
   /** @return the target square if the move might be valid, None if not.
    *          "Might be valid": On the target square might be a piece of the same color.
    *          Does not check whether moves are beyond borders of the board. */
-  def tryMove(piece: Piece, from: Square, to: Square): Option[Square] =
+  private def tryMove(piece: Piece, from: Square, to: Square): Option[Square] = {
     val rows = to.row - from.row // difference in rows (vertical movement, e.g. 1 -> 2)
     val cols = to.col - from.col // difference in cols (horizontal movement, e.g. a -> b)
 
@@ -44,7 +46,7 @@ case class Board(size: Square, map: Map[Square, MapEntry]):
 
       startingAt(from + (colStep, rowStep))
 
-    piece.value.toUpper match {
+    piece.value.toUpper match
       case 'K' => // King move logic
         if Math.abs(rows) > 1 || Math.abs(cols) > 1 then None // can not move more than one square in any direction
         else Some(to)
@@ -70,8 +72,8 @@ case class Board(size: Square, map: Map[Square, MapEntry]):
       case 'M' => // Pawn already moved logic
         pawnMoveOneLogic
       case _ => throw new IllegalArgumentException(s"Unknown piece type: $piece")
-    }
-
+  }
+  
   override def toString: String =
     val rows = for (r <- (0 until size.row.value).reverse) yield
       val cols = for (c <- 0 until size.col.value) yield
