@@ -20,7 +20,7 @@ class GameHandler(id: String):
 
   private def advance(): Unit = synchronized {
     val time = eventTimer.time
-    val (newGame, moves) = executeScheduledMoves(game, time)
+    val (newGame, moves) = game.executeScheduledMoves(time)
     game = newGame
     moves.foreach((from, to) => subscriptions.foreach(_.message(s"move: ${from.string} ${to.string}")))
     subscriptions.foreach(_.message(s"advance: $time"))
