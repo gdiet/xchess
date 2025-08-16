@@ -92,20 +92,25 @@ async function initializeGraphics(ches, tech) {
 
   // Render the chess board background to make it event sensitive
   const chessBoard = new Graphics({})
-  chessBoard.rect(0, 0, ches.size.cols * 100, ches.size.rows * 100)
+  chessBoard.rect(0, 0, ches.size.cols, ches.size.rows)
   chessBoard.fill(0x282020)
-  tech.app.stage.addChild(chessBoard)
-
   // Add the checkers
-  const checkers = new Graphics({})
   for (var x = 0; x < ches.size.cols; x++)
     for (var y = ches.white ? x%2 : (x+1)%2; y < ches.size.rows; y += 2)
-      checkers.rect(x * 100, y * 100, 100, 100)
-  checkers.fill(0xa0a0a0)
-  tech.app.stage.addChild(checkers)
+      chessBoard.rect(x, y, 1, 1)
+  chessBoard.fill(0xa0a0a0)
+  tech.app.stage.addChild(chessBoard)
 
-  // FIXME
-  tech.app.stage.scale.set(0.2)
+  const xBound = tech.app.canvas.width * 0.9
+  const yBound = tech.app.canvas.height * 0.9
+  const scale = Math.min(xBound / ches.size.cols, yBound / ches.size.rows)
+  tech.app.stage.scale.set(scale)
+
+  chessBoard.x = (tech.app.canvas.width / scale - ches.size.cols) / 2
+  chessBoard.y = (tech.app.canvas.height / scale - ches.size.rows) / 2
+
+  // together with pivot to simplify the coordinate system
+  tech.app.stage.origin.set(-1,-1)
 }
 
 /**
