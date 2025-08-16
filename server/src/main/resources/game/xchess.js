@@ -1,6 +1,9 @@
 // @ts-check
 // For release, use the minified library pixi/pixi.min.mjs
-import { Application, Assets, Container, Sprite } from './pixi/pixi.mjs';
+// / <reference path="./pixi/pixi.js.d.ts" />  // FIXME needed or not?
+import { Application } from './pixi/pixi.mjs'
+
+/** @typedef {import("./pixi/pixi.mjs").Application} Application */
 
 /**
  * @typedef {Object} Ches
@@ -15,6 +18,7 @@ import { Application, Assets, Container, Sprite } from './pixi/pixi.mjs';
 /**
  * @typedef {Object} Tech
  * @property {WebSocket} ws
+ * @property {Application} app
  */
 
 setup()
@@ -28,7 +32,10 @@ function setup() {
     clock: { start: null, offset: null },
     freeze: -1
   }
-  const tech = { ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`) }
+  const tech = {
+    ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`),
+    app: new Application()
+  }
   tech.ws.onopen  = _ => console.log(`- websocket opened -`)
   tech.ws.onerror = _ => { console.log(`- websocket error -`); location.href = "notfound.html" + loc.search }
   tech.ws.onclose = _ => console.log(`- websocket closed -`)
@@ -75,7 +82,7 @@ function receiveSetupMessages(ches, tech) { return event => {
  * @returns {void}
  */
 function initializeGraphics(ches, tech) {
-  new Application({width: 100, height: 100})
+  // {width: 100, height: 100}
   // // Create the Pixi Application for the chess board
   // tech.app = new PIXI.Application({width: ches.size.cols * 100, height: ches.size.rows * 100})
   // const checkers = new PIXI.Graphics()

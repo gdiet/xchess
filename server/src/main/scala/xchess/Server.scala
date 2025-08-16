@@ -59,12 +59,12 @@ object Server extends cask.MainRoutes:
 
   private def serveStaticFile(path: Seq[String], queryParams: QueryParams): Response[Data] =
     val filePath = path.foldLeft(webRoot)(_.resolve(_))
-    if Files.isDirectory(filePath) then {
+    if Files.isDirectory(filePath) then
       val paramPairs  = queryParams.value.flatMap((k,s) => s.map(v => s"$k=$v"))
       val paramString = mkString(paramPairs, "?", "&", "")
       val pathString  = mkString(path, "/", "/", "/index.html")
       Response("", 301, Seq("Location" -> (pathString + paramString)), Nil)
-    } else if Files.isRegularFile(filePath) then
+    else if Files.isRegularFile(filePath) then
       val contentType =
         if filePath.toFile.getName.endsWith(".mjs") then "text/javascript"
         else Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
