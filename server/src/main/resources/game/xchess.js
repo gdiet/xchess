@@ -88,7 +88,7 @@ async function initializeGraphics(ches, tech) {
   const htmlContainer = document.getElementById('gameContainer') || document.body
   await tech.app.init({ background: '#1099bb', resizeTo: htmlContainer })
   htmlContainer.replaceChildren(tech.app.canvas)
-  console.log(tech.app.canvas.width, tech.app.canvas.height)
+  console.log(tech.app.canvas.width, tech.app.canvas.height) // FIXME remove
 
   // Render the chess board background to make it event sensitive
   const chessBoard = new Graphics({})
@@ -96,7 +96,7 @@ async function initializeGraphics(ches, tech) {
   chessBoard.fill(0x282020)
   // Add the checkers
   for (var x = 0; x < ches.size.cols; x++)
-    for (var y = ches.white ? x%2 : (x+1)%2; y < ches.size.rows; y += 2)
+    for (var y = x%2; y < ches.size.rows; y += 2)
       chessBoard.rect(x, y, 1, 1)
   chessBoard.fill(0xa0a0a0)
   tech.app.stage.addChild(chessBoard)
@@ -104,13 +104,17 @@ async function initializeGraphics(ches, tech) {
   const xBound = tech.app.canvas.width * 0.9
   const yBound = tech.app.canvas.height * 0.9
   const scale = Math.min(xBound / ches.size.cols, yBound / ches.size.rows)
-  tech.app.stage.scale.set(scale)
-
   chessBoard.x = (tech.app.canvas.width / scale - ches.size.cols) / 2
   chessBoard.y = (tech.app.canvas.height / scale - ches.size.rows) / 2
+  tech.app.stage.scale.set(scale)
 
-  // together with pivot to simplify the coordinate system
-  tech.app.stage.origin.set(-1,-1)
+  tech.app.stage.interactive = true
+  tech.app.stage.on('pointerdown', (event) => {
+    const pos = event.data.getLocalPosition(chessBoard);
+    const x = ches.white ? Math.floor(pos.x) : ches.size.cols - Math.ceil(pos.x);
+    const y = ches.white ? ches.size.rows - Math.ceil(pos.y) : Math.floor(pos.y);
+    console.log(`Pointer down at: ${x}, ${y}`);
+  });
 }
 
 /**
