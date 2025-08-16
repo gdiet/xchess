@@ -82,25 +82,30 @@ function receiveSetupMessages(ches, tech) { return async event => {
  * @returns {Promise<void>}
  */
 async function initializeGraphics(ches, tech) {
+  console.log(`- initialize graphics -`)
+
   // Create the Pixi Application for the chess board
   const htmlContainer = document.getElementById('gameContainer') || document.body
   await tech.app.init({ background: '#1099bb', resizeTo: htmlContainer })
   htmlContainer.replaceChildren(tech.app.canvas)
+  console.log(tech.app.canvas.width, tech.app.canvas.height)
 
-  // await tech.app.init({width: ches.size.cols * 100, height: ches.size.rows * 100})
-  const checkers = new Graphics({})
   // Render the chess board background to make it event sensitive
-  // checkers.beginFill(0x282020)
-  // checkers.drawRect(0, 0, ches.size.cols * 100, ches.size.rows * 100)
-  // checkers.endFill()
-  // // Add the checkers
-  // checkers.beginFill(0xa0a0a0)
-  // for (var x = 0; x < ches.size.cols; x++)
-  //   for (var y = ches.white ? x%2 : (x+1)%2; y < ches.size.rows; y += 2)
-  //     checkers.drawRect(x * 100, y * 100, 100, 100)
-  // checkers.endFill()
-  // tech.app.stage.addChild(checkers)
-  console.log(`- initialize graphics -`)
+  const chessBoard = new Graphics({})
+  chessBoard.rect(0, 0, ches.size.cols * 100, ches.size.rows * 100)
+  chessBoard.fill(0x282020)
+  tech.app.stage.addChild(chessBoard)
+
+  // Add the checkers
+  const checkers = new Graphics({})
+  for (var x = 0; x < ches.size.cols; x++)
+    for (var y = ches.white ? x%2 : (x+1)%2; y < ches.size.rows; y += 2)
+      checkers.rect(x * 100, y * 100, 100, 100)
+  checkers.fill(0xa0a0a0)
+  tech.app.stage.addChild(checkers)
+
+  // FIXME
+  tech.app.stage.scale.set(0.2)
 }
 
 /**
