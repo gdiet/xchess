@@ -88,8 +88,7 @@ async function initializeGraphics(ches, tech) {
   const htmlContainer = document.getElementById('gameContainer') || document.body
   await tech.app.init({ background: '#1099bb', resizeTo: htmlContainer })
   htmlContainer.replaceChildren(tech.app.canvas)
-  console.log(tech.app.canvas.width, tech.app.canvas.height) // FIXME remove
-
+ 
   // Render the chess board background to make it event sensitive
   const chessBoard = new Graphics({})
   chessBoard.rect(0, 0, ches.size.cols, ches.size.rows)
@@ -101,12 +100,8 @@ async function initializeGraphics(ches, tech) {
   chessBoard.fill(0xa0a0a0)
   tech.app.stage.addChild(chessBoard)
 
-  const xBound = tech.app.canvas.width * 0.9
-  const yBound = tech.app.canvas.height * 0.9
-  const scale = Math.min(xBound / ches.size.cols, yBound / ches.size.rows)
-  chessBoard.x = (tech.app.canvas.width / scale - ches.size.cols) / 2
-  chessBoard.y = (tech.app.canvas.height / scale - ches.size.rows) / 2
-  tech.app.stage.scale.set(scale)
+  resize(ches, tech, chessBoard)
+  window.addEventListener('resize', () => resize(ches, tech, chessBoard))
 
   tech.app.stage.interactive = true
   tech.app.stage.on('pointerdown', (event) => {
@@ -115,6 +110,22 @@ async function initializeGraphics(ches, tech) {
     const y = ches.white ? ches.size.rows - Math.ceil(pos.y) : Math.floor(pos.y);
     console.log(`Pointer down at: ${x}, ${y}`);
   });
+}
+
+/**
+ * @param {Ches} ches
+ * @param {Tech} tech
+ * @param {Graphics} chessBoard
+ * @returns {void}
+ */
+function resize(ches, tech, chessBoard) {
+  console.log(tech.app.canvas.width, tech.app.canvas.height) // FIXME remove
+  const xBound = tech.app.canvas.width * 0.9
+  const yBound = tech.app.canvas.height * 0.9
+  const scale = Math.min(xBound / ches.size.cols, yBound / ches.size.rows)
+  chessBoard.x = (tech.app.canvas.width / scale - ches.size.cols) / 2
+  chessBoard.y = (tech.app.canvas.height / scale - ches.size.rows) / 2
+  tech.app.stage.scale.set(scale)
 }
 
 /**
