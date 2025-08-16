@@ -1,7 +1,7 @@
 // @ts-check
 // For release, use the minified library pixi/pixi.min.mjs
 // / <reference path="./pixi/pixi.js.d.ts" />  // FIXME needed or not?
-import { Application } from './pixi/pixi.mjs'
+import { Application, Graphics } from './pixi/pixi.mjs'
 
 /** @typedef {import("./pixi/pixi.mjs").Application} Application */
 
@@ -47,7 +47,7 @@ function setup() {
  * @param {Tech} tech
  * @returns {(event: MessageEvent<string>) => void}
  */
-function receiveSetupMessages(ches, tech) { return event => {
+function receiveSetupMessages(ches, tech) { return async event => {
   const [command, arg1, arg2] = event.data.split(" ")
   console.log(`Setup: ${command} ${arg1} ${arg2}`)
   switch (command) {
@@ -71,7 +71,7 @@ function receiveSetupMessages(ches, tech) { return event => {
   if (ches.size.cols > 0 && ches.size.rows > 0 && (ches.clock.offset != null || ches.clock.start != null) && ches.freeze >= 0) {
     console.log(`- setup complete -`)
     console.debug(`Setup data: ${JSON.stringify(ches)}`)
-    initializeGraphics(ches, tech)
+    await initializeGraphics(ches, tech)
     tech.ws.onmessage = receiveGameMessages(ches, tech)
   }
 }}
@@ -79,14 +79,17 @@ function receiveSetupMessages(ches, tech) { return event => {
 /**
  * @param {Ches} ches
  * @param {Tech} tech
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function initializeGraphics(ches, tech) {
-  // {width: 100, height: 100}
-  // // Create the Pixi Application for the chess board
-  // tech.app = new PIXI.Application({width: ches.size.cols * 100, height: ches.size.rows * 100})
-  // const checkers = new PIXI.Graphics()
-  // // Render the chess board background to make it event sensitive
+async function initializeGraphics(ches, tech) {
+  // Create the Pixi Application for the chess board
+  const htmlContainer = document.getElementById('gameContainer') || document.body
+  await tech.app.init({ background: '#1099bb', resizeTo: htmlContainer })
+  htmlContainer.replaceChildren(tech.app.canvas)
+
+  // await tech.app.init({width: ches.size.cols * 100, height: ches.size.rows * 100})
+  const checkers = new Graphics({})
+  // Render the chess board background to make it event sensitive
   // checkers.beginFill(0x282020)
   // checkers.drawRect(0, 0, ches.size.cols * 100, ches.size.rows * 100)
   // checkers.endFill()
@@ -110,17 +113,17 @@ function receiveGameMessages(ches, tech) { return event => {
 }}
 
 // async function init() {
-//   // Create a new application
-//   const app = new PIXI.Application();
+        //   // Create a new application
+        //   const app = new PIXI.Application();
 
-//   // the containing element for the application
-//   const htmlContainer = document.getElementById('gameContainer')
+        //   // the containing element for the application
+        //   const htmlContainer = document.getElementById('gameContainer')
 
-//   // Initialize the application
-//   await app.init({ background: '#1099bb', resizeTo: htmlContainer });
+        //   // Initialize the application
+        //   await app.init({ background: '#1099bb', resizeTo: htmlContainer });
 
-//   // Append the application canvas to the document body
-//   htmlContainer.appendChild(app.canvas);
+        //   // Append the application canvas to the document body
+        //   htmlContainer.appendChild(app.canvas);
 
 //   // Create and add a container to the stage
 //   const container = new PIXI.Container();
