@@ -65,7 +65,9 @@ object Server extends cask.MainRoutes:
       val pathString  = mkString(path, "/", "/", "/index.html")
       Response("", 301, Seq("Location" -> (pathString + paramString)), Nil)
     } else if Files.isRegularFile(filePath) then
-      val contentType = Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
+      val contentType =
+        if filePath.toFile.getName.endsWith(".mjs") then "text/javascript"
+        else Option(Files.probeContentType(filePath)).getOrElse("application/octet-stream")
       Response(java.nio.file.Files.newInputStream(filePath): Data, 200, Seq("Content-Type" -> contentType))
     else
       Response("": Data, 404)

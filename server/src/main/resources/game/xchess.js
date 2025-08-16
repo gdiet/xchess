@@ -1,4 +1,7 @@
 // @ts-check
+// For release, use the minified library pixi/pixi.min.mjs
+import { Application, Assets, Container, Sprite } from './pixi/pixi.mjs';
+
 /**
  * @typedef {Object} Ches
  * @property {boolean} white
@@ -72,6 +75,21 @@ function receiveSetupMessages(ches, tech) { return event => {
  * @returns {void}
  */
 function initializeGraphics(ches, tech) {
+  new Application({width: 100, height: 100})
+  // // Create the Pixi Application for the chess board
+  // tech.app = new PIXI.Application({width: ches.size.cols * 100, height: ches.size.rows * 100})
+  // const checkers = new PIXI.Graphics()
+  // // Render the chess board background to make it event sensitive
+  // checkers.beginFill(0x282020)
+  // checkers.drawRect(0, 0, ches.size.cols * 100, ches.size.rows * 100)
+  // checkers.endFill()
+  // // Add the checkers
+  // checkers.beginFill(0xa0a0a0)
+  // for (var x = 0; x < ches.size.cols; x++)
+  //   for (var y = ches.white ? x%2 : (x+1)%2; y < ches.size.rows; y += 2)
+  //     checkers.drawRect(x * 100, y * 100, 100, 100)
+  // checkers.endFill()
+  // tech.app.stage.addChild(checkers)
   console.log(`- initialize graphics -`)
 }
 
@@ -81,7 +99,7 @@ function initializeGraphics(ches, tech) {
  * @returns {(event: MessageEvent<string>) => void}
  */
 function receiveGameMessages(ches, tech) { return event => {
-  console.log(`Game: ${event.data}`)
+  console.debug(`Game: ${event.data}`)
 }}
 
 // async function init() {
