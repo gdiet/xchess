@@ -1,7 +1,7 @@
 // @ts-check
 // For release, use the minified library pixi/pixi.min.mjs
 // / <reference path="./pixi/pixi.js.d.ts" />  // FIXME needed or not?
-import { Application, Graphics } from './pixi/pixi.mjs'
+import { Application, Assets, Graphics, Sprite } from './pixi/pixi.mjs'
 
 /** @typedef {import("./pixi/pixi.mjs").Application} Application */
 
@@ -21,7 +21,16 @@ import { Application, Graphics } from './pixi/pixi.mjs'
  * @property {Application} app
  */
 
+loadAssets()
 setup()
+
+async function loadAssets() {
+  "BKNPQR".split("").forEach(async piece => {
+    await Assets.load({ alias: piece,               src: `cardinal/w${piece}.svg`, data: { resolution: 2 } });
+    await Assets.load({ alias: piece.toLowerCase(), src: `cardinal/b${piece}.svg`, data: { resolution: 2 } });
+  });
+  console.log(`- assets loaded -`)
+}
 
 function setup() {
   const loc  = window.location
@@ -73,6 +82,11 @@ function receiveSetupMessages(ches, tech) { return async event => {
     console.debug(`Data after setup: ${JSON.stringify(ches)}`)
     await initializeGraphics(ches, tech)
     tech.ws.onmessage = receiveGameMessages(ches, tech)
+
+    // FIXME demo code, remove soon
+    const mySprite = new Sprite(Assets.get("Q"));
+    mySprite.setSize(1, 1);
+    tech.app.stage.addChild(mySprite);
   }
 }}
 
