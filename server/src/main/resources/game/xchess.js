@@ -19,6 +19,7 @@ import { Application, Assets, Graphics, Sprite } from './pixi/pixi.mjs'
  * @typedef {Object} Tech
  * @property {WebSocket} ws
  * @property {Application} app
+ * @property {Map<string, Sprite>} pieces
  */
 
 loadAssets()
@@ -43,7 +44,8 @@ function setup() {
   }
   const tech = {
     ws: new WebSocket(`${loc.protocol.replace("http","ws")}//${loc.host}/ws/${name}`),
-    app: new Application()
+    app: new Application(),
+    pieces: new Map()
   }
   tech.ws.onopen  = _ => console.log(`- websocket opened -`)
   tech.ws.onerror = _ => { console.log(`- websocket error -`); location.href = "notfound.html" + loc.search }
@@ -82,11 +84,6 @@ function receiveSetupMessages(ches, tech) { return async event => {
     console.debug(`Data after setup: ${JSON.stringify(ches)}`)
     await initializeGraphics(ches, tech)
     tech.ws.onmessage = receiveGameMessages(ches, tech)
-
-    // FIXME demo code, remove soon
-    const mySprite = new Sprite(Assets.get("Q"));
-    mySprite.setSize(1, 1);
-    tech.app.stage.addChild(mySprite);
   }
 }}
 
@@ -123,6 +120,15 @@ async function initializeGraphics(ches, tech) {
     const y = ches.white ? ches.size.rows - Math.ceil(pos.y) : Math.floor(pos.y);
     console.log(`Pointer down at: ${x}, ${y}`);
   });
+
+  // FIXME demo code, remove soon
+  // add board to container, resize container
+  // possibly invert coordinats like: container.scale.y = -1
+  const mySprite = new Sprite(Assets.get("Q"));
+  mySprite.setSize(1, 1);
+  mySprite.x = 0
+  mySprite.y = 0
+  chessBoard.addChild(mySprite);
 }
 
 /**
@@ -146,7 +152,17 @@ function resize(ches, tech, chessBoard) {
  * @returns {(event: MessageEvent<string>) => void}
  */
 function receiveGameMessages(ches, tech) { return event => {
-  console.debug(`Game: ${event.data}`)
+  const [command, arg] = event.data.split(/ (.+)/)
+  console.debug(`Game: ${command} - ${arg}`)
+
+  switch(command) {
+    case "add":
+      const [loc, piece, freeze] = arg.split(" ")
+      console.log(`Adding piece ${piece} at ${loc} with freeze ${freeze}`)
+      break
+    default:
+      console.warn(`Unknown game command: ${command}`)
+  }
 }}
 
 // async function init() {
