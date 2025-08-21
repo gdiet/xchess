@@ -70,7 +70,7 @@ function receiveSetupMessages(ches, tech) { return async event => {
   }
   if (ches.size.cols > 0 && ches.size.rows > 0 && (ches.clock.offset != null || ches.clock.start != null) && ches.freeze >= 0) {
     console.log(`- setup complete -`)
-    console.debug(`Setup data: ${JSON.stringify(ches)}`)
+    console.debug(`Data after setup: ${JSON.stringify(ches)}`)
     await initializeGraphics(ches, tech)
     tech.ws.onmessage = receiveGameMessages(ches, tech)
   }
@@ -101,7 +101,6 @@ async function initializeGraphics(ches, tech) {
   tech.app.stage.addChild(chessBoard)
 
   resize(ches, tech, chessBoard)
-  window.addEventListener('resize', () => resize(ches, tech, chessBoard))
 
   tech.app.stage.interactive = true
   tech.app.stage.on('pointerdown', (event) => {
@@ -119,7 +118,6 @@ async function initializeGraphics(ches, tech) {
  * @returns {void}
  */
 function resize(ches, tech, chessBoard) {
-  console.log(tech.app.canvas.width, tech.app.canvas.height) // FIXME remove
   const xBound = tech.app.canvas.width * 0.9
   const yBound = tech.app.canvas.height * 0.9
   const scale = Math.min(xBound / ches.size.cols, yBound / ches.size.rows)
