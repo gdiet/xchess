@@ -127,8 +127,9 @@ async function initializeGraphics(ches, tech) {
   const mySprite = new Sprite(Assets.get("Q"));
   mySprite.setSize(1, 1);
   mySprite.x = 0
-  mySprite.y = 0
+  mySprite.y = 7
   chessBoard.addChild(mySprite);
+  chessBoard.scale.x = -1;
 }
 
 /**

@@ -32,12 +32,12 @@ class GameHandler(id: String):
     subscription.message(s"freeze ${game.freezeTime}")
     subscription.message(s"clock ${eventTimer.time} ${if eventTimer.isStopped then "stopped" else "running"}")
     game.board.map.foreach((square, entry) => {
-      subscription.message(s"board: ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
+      subscription.message(s"add ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
     })
     game.plannedMoves.foreach((from, to) =>
-      subscription.message(s"plan: ${from.string} ${to.string}")
+      subscription.message(s"plan ${from.string} ${to.string}")
     )
-    chat.reverse.foreach(message => subscription.message(s"chat: $message"))
+    chat.reverse.foreach(message => subscription.message(s"chat $message"))
   }
 
   def unsubscribe(subscription: Subscription): Unit = synchronized {
