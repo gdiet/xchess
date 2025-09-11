@@ -1,8 +1,0 @@
-.*
-client/.*
-server/.*
-server/target
-server/project/project
-server/project/target
-Dockerfile
-heroku.yml
