@@ -27,7 +27,7 @@ case class PlannedMoves(
     val (first, second) = planIds.flatMap(plans.get).partition(_.isWhite == whiteFirst)
     val plansToExecute = interleave(first, second)
     val (newBoard, targets) =
-      plansToExecute.foldLeft[(Board, Seq[Square])]((board, Seq())) {
+      plansToExecute.foldLeft((board, Seq[Square]())) {
         case ((currentBoard, currentTargets), (_, from, to, _)) =>
           currentBoard.executeMove(from, to, time + freezeTime) match
             case None => (currentBoard, currentTargets)
@@ -35,6 +35,7 @@ case class PlannedMoves(
       }
     val squaresToRemovePlansFrom = targets ++ plansToExecute.map(_.from)
     // TODO should probably be inlined
+    squaresToRemovePlansFrom.flatMap(boardPlan.get) // TODO and so on
     squaresToRemovePlansFrom.foldLeft(this)(_.removePlannedMove(_)).copy(board = newBoard)
 
   private def removePlannedMove(from: Square): PlannedMoves =
