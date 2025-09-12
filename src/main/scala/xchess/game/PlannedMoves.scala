@@ -14,21 +14,33 @@ case class PlannedMoves(
                          nextId: PlanId
                        ):
 
+  private type Move = (from: Square, to: Square)
+  private type PlanReference = (from: Square, forWhite: Boolean)
+
   /** @return planned moves, executed moves, removed plans. */
-  final def executePlans2(upToTime: GameTime, freezeTime: Long): // TODO use private types for readability
-    (PlannedMoves, Seq[(from: Square, to: Square)], Seq[(from: Square, forWhite: Boolean)] ) =
-    timePlan.takeWhile(_._1 <= upToTime).foldLeft(
-      (this, Seq[(from: Square, to: Square)](), Seq[(from: Square, forWhite: Boolean)]())
-    ) { case ((currentPlannedMoves, executedMoves, removedPlans), (time, planIds)) =>
-      val (nextPlannedMoves, executed, removed) = executePlans2(time, planIds, freezeTime)
-      (nextPlannedMoves, executedMoves ++ executed, removedPlans ++ removed)
-    }
+  final def executePlans2(upToTime: GameTime, freezeTime: Long): (PlannedMoves, Seq[Move], Seq[PlanReference] ) =
+    timePlan
+      .takeWhile { case (time, _) => time <= upToTime }
+      .foldLeft((this, Seq[Move](), Seq[PlanReference]())) {
+        case ((currentPlannedMoves, executedMoves, removedPlans), (time, planIds)) =>
+          val (nextPlannedMoves, executed, removed) = executePlans2(time, planIds, freezeTime)
+          (nextPlannedMoves, executedMoves ++ executed, removedPlans ++ removed)
+      }
 
   private def executePlans2(time: GameTime, planIds: Seq[PlanId], freezeTime: Long):
-    (PlannedMoves, Seq[(from: Square, to: Square)], Seq[(from: Square, forWhite: Boolean)]) = {
-
-
-
+    (PlannedMoves, Seq[Move], Seq[PlanReference]) = {
+    val whiteFirst = time.whiteFirst
+    val (first, second) = planIds.flatMap(plans.get).partition(_.isWhite == whiteFirst)
+    val plansToExecute = interleave(first, second)
+    val (newBoard, moves) =
+      plansToExecute.foldLeft((board, Seq[Move]())) {
+        case ((currentBoard, currentMoves), (_, from, to, _)) =>
+          currentBoard.executeMove(from, to, time + freezeTime) match
+            case None => (currentBoard, currentMoves)
+            case Some((newBoard, target)) => (newBoard, currentMoves :+ (from, target))
+      }
+    val squaresToRemovePlansFrom = moves.map(_.to) ++ plansToExecute.map(_.from)
+    // FIXME continue
     ???
   }
 
