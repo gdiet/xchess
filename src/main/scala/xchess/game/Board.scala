@@ -7,12 +7,10 @@ case class Board(size: Square, map: Map[Square, PieceOnMap]):
   /** Handles illegal move like a rook moving like a bishop.
     * Detects and prevents move to squares with pieces of the same color.
     * Handles capturing and pawn to queen promotion.
-    *
-    * FIXME implement and test
     * Variable distance move (queen, bishop, rook) blocked by enemy piece captures that piece.
     * Variable distance move (queen, bishop, rook) blocked by own piece is not executed at all.
     *
-    * Does not check whether move goes beyond board limit.
+    * Does _not_ check whether move goes beyond board limit.
     *
     * @return the new board and the square the piece moved to, or None if the move is invalid. */
   def executeMove(from: Square, to: Square, freezeUntil: GameTime): Option[(board: Board, movedTo: Square)] =
