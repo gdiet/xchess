@@ -14,8 +14,8 @@ object Piece:
   def apply(value: Char): Piece = value
   extension (p: Piece) def value  : Char    = p
   extension (p: Piece) def isWhite: Boolean = p.isUpper
-  extension (p: Piece) def promote: Piece   = { assert(p.toUpper == 'M'); if p.isUpper then 'Q' else 'q' }
   extension (p: Piece) def isPawn : Boolean = p == 'P' || p == 'p' || p == 'M' || p == 'm'
+  extension (p: Piece) def promote: Piece   = { assert(p.toUpper == 'M'); if p.isUpper then 'Q' else 'q' }
   extension (p: Piece) def moved  : Piece   = p match
     case 'P' => 'M' // white pawn moved
     case 'p' => 'm' // black pawn moved
@@ -24,20 +24,23 @@ object Piece:
 opaque type Row = Int // rank 1 to 8 in standard chess, here 0 to 7 (more for large boards)
 object Row:
   def apply(value: Int): Row = value
-  extension (r: Row) def value         : Int = r
+  extension (r: Row) def value: Int = r
   extension (r: Row) def - (other: Row): Int = r - other
 
 opaque type Col = Int // file a to h in standard chess, here 0 to 7 (more for large boards)
 object Col:
   def apply(value: Int): Col = value
-  extension (c: Col) def value         : Int = c
+  extension (c: Col) def value: Int = c
   extension (c: Col) def - (other: Col): Int = c - other
 
 opaque type GameTime = Long // in arbitrary ticks, 0 is the start of the game
 object GameTime:
-  def apply(value: Long)             : GameTime = value
+  def apply(value: Long): GameTime = value
   def max(t1: GameTime, t2: GameTime): GameTime = if t1 > t2 then t1 else t2
   extension (t: GameTime) def value: Long = t
+  extension (t: GameTime) def whiteFirst: Boolean = t % 2 == 0
+  extension (t: GameTime) def > (other: GameTime): Boolean = t > other
+  extension (t: GameTime) def + (increment: Long): GameTime = t + increment
 
 opaque type PlanId = Long
 object PlanId:
