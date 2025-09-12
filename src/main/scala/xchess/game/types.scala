@@ -39,7 +39,8 @@ object GameTime:
   def max(t1: GameTime, t2: GameTime): GameTime = if t1 > t2 then t1 else t2
   extension (t: GameTime) def value: Long = t
   extension (t: GameTime) def whiteFirst: Boolean = t % 2 == 0
-  extension (t: GameTime) def > (other: GameTime): Boolean = t > other
+  extension (t: GameTime) def > (other: GameTime): Boolean = t > other // FIXME unused?
+  extension (t: GameTime) def <= (other: GameTime): Boolean = t <= other
   extension (t: GameTime) def + (increment: Long): GameTime = t + increment
 
 opaque type PlanId = Long

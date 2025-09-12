@@ -14,6 +14,25 @@ case class PlannedMoves(
                          nextId: PlanId
                        ):
 
+  /** @return planned moves, executed moves, removed plans. */
+  final def executePlans2(upToTime: GameTime, freezeTime: Long): // TODO use private types for readability
+    (PlannedMoves, Seq[(from: Square, to: Square)], Seq[(from: Square, forWhite: Boolean)] ) =
+    timePlan.takeWhile(_._1 <= upToTime).foldLeft(
+      (this, Seq[(from: Square, to: Square)](), Seq[(from: Square, forWhite: Boolean)]())
+    ) { case ((currentPlannedMoves, executedMoves, removedPlans), (time, planIds)) =>
+      val (nextPlannedMoves, executed, removed) = executePlans2(time, planIds, freezeTime)
+      (nextPlannedMoves, executedMoves ++ executed, removedPlans ++ removed)
+    }
+
+  private def executePlans2(time: GameTime, planIds: Seq[PlanId], freezeTime: Long):
+    (PlannedMoves, Seq[(from: Square, to: Square)], Seq[(from: Square, forWhite: Boolean)]) = {
+
+
+
+    ???
+  }
+
+  /** FIXME needs to return the list of executed moves and the list of removed plans. */
   @annotation.tailrec
   final def executePlans(upToTime: GameTime, freezeTime: Long): PlannedMoves =
     timePlan.headOption match
