@@ -54,7 +54,6 @@ object Square:
   extension (s: Square) def + (cols: Int, rows: Int): Square = (s.col + cols, s.row + rows)
   extension (s: Square) def notNegative: Boolean = s.col >= 0 && s.row >= 0
   extension (s: Square) def <= (other: Square): Boolean = s.col <= other.col && s.row <= other.row
-  extension (s: Square) def contains(from: Square, to: Square): Boolean =
-    from.notNegative && from <= s && to.notNegative && to <= s
+  extension (s: Square) def contains(other: Square): Boolean = other.notNegative && other <= s
 
 type PieceOnMap = (piece: Piece, frozenUntil: GameTime)

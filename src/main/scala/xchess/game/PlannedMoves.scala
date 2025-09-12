@@ -34,18 +34,8 @@ case class PlannedMoves(
             case Some((newBoard, target)) => (newBoard, currentTargets :+ target)
       }
     val squaresToRemovePlansFrom = targets ++ plansToExecute.map(_.from)
+    // TODO should probably be inlined
     squaresToRemovePlansFrom.foldLeft(this)(_.removePlannedMove(_)).copy(board = newBoard)
-
-  /** (Un-)plans a move for a player if possible.
-    * If from == to, the planned move is removed. */
-  def plan(from: Square, to: Square, forWhite: Boolean, earliestTime: GameTime): PlannedMoves =
-    if !board.size.contains(from, to) then this
-    else board.map.get(from) match
-      case None => this
-      case Some((piece, frozenUntil)) =>
-        if piece.isWhite != forWhite then this
-        else if from == to then removePlannedMove(from)
-        else addPlannedMove(piece, from, to, max(frozenUntil, earliestTime))
 
   private def removePlannedMove(from: Square): PlannedMoves =
     boardPlan.get(from) match
@@ -63,6 +53,18 @@ case class PlannedMoves(
               plans = plans - planId
             )
 
+  /** Plans a move for a player if possible.
+    *
+    * @return planned time + planned moves, or None for invalid plan. */
+  def plan(from: Square, to: Square, forWhite: Boolean, earliestTime: GameTime): Option[(GameTime, PlannedMoves)] =
+    assert(from != to)
+    if !board.size.contains(to) then None
+    else board.map.get(from).flatMap { case (piece, frozenUntil) =>
+      if piece.isWhite != forWhite then None else
+        val time = max(frozenUntil, earliestTime)
+        Some((time, addPlannedMove(piece, from, to, time)))
+    }
+
   private def addPlannedMove(piece: Piece, from: Square, to: Square, time: GameTime): PlannedMoves =
     copy(
       boardPlan = boardPlan + (from -> nextId),
@@ -72,4 +74,23 @@ case class PlannedMoves(
       },
       plans = plans + (nextId -> (piece.isWhite, from, to, time)),
       nextId = nextId + 1
+    )
+
+  /** Remove a move plan for a player if possible.
+    *
+    * @return planned moves, or None if no plan is found. */
+  def unPlan(from: Square, forWhite: Boolean): Option[PlannedMoves] =
+    boardPlan.get(from).flatMap(planId =>
+      plans.get(planId) match
+        case None => assert(false); None
+        case Some(plan) =>
+          if plan.isWhite != forWhite then None
+          else Some(copy(
+            boardPlan = boardPlan - from,
+            timePlan = timePlan.updatedWith(plan.time) {
+              case None => assert(false); None
+              case some => some.map(_.filter(_ != planId))
+            },
+            plans = plans - planId
+          ))
     )
