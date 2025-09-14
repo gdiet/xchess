@@ -30,16 +30,17 @@ case class PlannedMoves(
   private def executePlans(time: GameTime, planIds: Seq[PlanId], freezeTime: Long):
         (PlannedMoves, Seq[Move], Seq[PlanReference]) =
     val whiteFirst = time.whiteFirst
-    val (first, second) = planIds.flatMap(plans.get).partition(_.isWhite == whiteFirst)
-    val plansToExecute = interleave(first, second)
+    val plansToExecute = planIds.flatMap(plans.get)
+    val (first, second) = plansToExecute.partition(_.isWhite == whiteFirst)
     val (newBoard, moves) =
-      plansToExecute.foldLeft((board, Seq[Move]())) {
+      interleave(first, second).foldLeft((board, Seq[Move]())) {
         case ((currentBoard, currentMoves), (_, from, to, _)) =>
-          currentBoard.executeMove(from, to, time + freezeTime) match
+          if (currentMoves.exists(_.to == from)) (currentBoard, currentMoves) // piece was captured
+          else currentBoard.executeMove(from, to, time + freezeTime) match
             case None => (currentBoard, currentMoves)
             case Some((newBoard, target)) => (newBoard, currentMoves :+ (from, target))
       }
-    val squaresToRemovePlansFrom = moves.map(_.to) ++ plansToExecute.map(_.from)
+    val squaresToRemovePlansFrom = (plansToExecute.map(_.from) ++ moves.map(_.to)).distinct
     val plansToRemove = squaresToRemovePlansFrom.flatMap(boardPlan.get)
     val removedPlansRefs = plansToRemove.flatMap { plans.get(_).map(plan => (plan.from, plan.isWhite)) }
     (copy(

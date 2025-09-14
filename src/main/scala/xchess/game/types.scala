@@ -34,6 +34,8 @@ object Col:
   extension (c: Col) def - (other: Col): Int = c - other
 
 opaque type GameTime = Long // in arbitrary ticks, 0 is the start of the game
+given Ordering[GameTime] with
+  def compare(x: GameTime, y: GameTime): Int = x.compare(y)
 object GameTime:
   def apply(value: Long): GameTime = value
   def max(t1: GameTime, t2: GameTime): GameTime = if t1 > t2 then t1 else t2
