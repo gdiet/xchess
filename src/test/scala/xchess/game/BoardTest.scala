@@ -31,3 +31,31 @@ class BoardTest extends munit.FunSuite:
         // success
     }
   }
+
+  test("white pawn promotion while capturing") {
+    Board(Square("H8"), Map(
+      Square("G7") -> wPawn,
+      Square("H8") -> bPawn,
+    )).executeMove(Square("G7"), Square("H8"), time) match {
+      case Some((newBoard, movedTo)) =>
+        assertEquals(movedTo, Square("H8"))
+        assertEquals(newBoard.map.size, 1)
+        assertEquals(newBoard.map.get(Square("H8")), Some((Piece('Q'), time)))
+      case None =>
+        fail("move should be valid")
+    }
+  }
+
+  test("black pawn promotion without capturing") {
+    Board(Square("H8"), Map(
+      Square("G2") -> bPawn,
+      Square("H1") -> wBishop,
+    )).executeMove(Square("G2"), Square("G1"), time) match {
+      case Some((newBoard, movedTo)) =>
+        assertEquals(movedTo, Square("G1"))
+        assertEquals(newBoard.map.size, 2)
+        assertEquals(newBoard.map.get(Square("G1")), Some((Piece('q'), time)))
+      case None =>
+        fail("move should be valid")
+    }
+  }
