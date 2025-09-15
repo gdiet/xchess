@@ -98,14 +98,14 @@ case class Board(size: Square, map: Map[Square, PieceOnMap]):
 
 object Board:
 
-  def apply(name: String, initialFreezeUntil: GameTime = GameTime(3000)): Board =
-    val lines = layout(name).linesIterator.toSeq
+  def apply(options: GameOptions): Board =
+    val lines = layout(options.boardLayout).linesIterator.toSeq
     val size = (col = Col(lines.head.length - 1), row = Row(lines.length - 1))
     val pieces = for {
       (line, y) <- lines.zipWithIndex
       (piece, x) <- line.zipWithIndex
       if piece != '+'
-    } yield (Col(x), Row(y)) -> (Piece(piece), initialFreezeUntil)
+    } yield (Col(x), Row(y)) -> (Piece(piece), GameTime(options.freezeTicks))
     new Board(size, pieces.toMap)
 
   private def layout(name: String): String = name match

@@ -14,8 +14,8 @@ object Server extends cask.Main with cask.Routes:
 
   val gameRegistry = xchess.game.GameRegistry()
 
-  /** { "id": "17" }
-    * id: optional, if omitted a random ID is used
+  /** { "id": "[random ID]", "boardLayout": "standard", "millisPerTick": 100, "freezeTicks": 50 }
+    * all fields are optional, defaults as shown above
     *
     * 201 Created: { "id": "17" }
     * 409 Conflict: { "cause": "[message]" } */
@@ -23,9 +23,14 @@ object Server extends cask.Main with cask.Routes:
   def postGame(ctx: Request): Response[ujson.Value] =
     val body = ujson.read(ctx.exchange.getInputStream).obj
     val id = body.get("id").flatMap(_.strOpt).getOrElse(java.util.UUID.randomUUID().toString)
-    gameRegistry.newGame(id) match
-      case Right(_) => Response(ujson.Obj("id" -> id), 201)
-      case Left(cause) => Response(ujson.Obj("cause" -> cause), 400)
+    game.GameOptions().withLayout(body.get("boardLayout").flatMap(_.strOpt))
+      .withTickMillis(body.get("millisPerTick").flatMap(_.numOpt).map(_.toLong))
+      .flatMap(_.withFreezeTicks(body.get("freezeTicks").flatMap(_.numOpt).map(_.toLong)))
+      .flatMap(gameRegistry.newGame(id, _))
+      .fold(
+        failure => Response(ujson.Obj("cause" -> failure.cause), failure.statusCode),
+        _ => Response(ujson.Obj("id" -> id), 201)
+      )
 
   @cask.websocket("/ws/:gameId")
   def websockets(gameId: String): WebsocketResult =
@@ -34,7 +39,7 @@ object Server extends cask.Main with cask.Routes:
       case Some(game) =>
         WsHandler { ws =>
           val subscription: xchess.game.Subscription = new xchess.game.Subscription:
-            override def onNext(message: String): Unit = ws.send(Ws.Text(message))
+            override def send(message: String): Unit = ws.send(Ws.Text(message))
             override def close(): Unit = ws.send(Ws.Close())
           game.subscribe(subscription)
           WsActor {

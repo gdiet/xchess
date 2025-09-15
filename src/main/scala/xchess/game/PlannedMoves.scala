@@ -8,10 +8,10 @@ import scala.collection.immutable.SortedMap
 
 case class PlannedMoves(
                          board: Board,
-                         boardPlan: Map[Square, PlanId],
-                         timePlan: SortedMap[GameTime, Seq[PlanId]],
-                         plans: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)],
-                         nextId: PlanId
+                         private val boardPlan: Map[Square, PlanId] = Map(),
+                         private val timePlan: SortedMap[GameTime, Seq[PlanId]] = SortedMap(),
+                         private val plans: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)] = Map(),
+                         private val nextId: PlanId = PlanId.zero
                        ):
 
   private type Move = (from: Square, to: Square)
