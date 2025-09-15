@@ -8,11 +8,11 @@ object Server extends cask.Main with cask.Routes:
   val staticFiles: java.nio.file.Path = java.nio.file.Paths.get("src/main/resources")
 
   initialize()
-  override def log: Logger = ServerLogger // disable debug logging
+  override def log: Logger = ServerLogger
   override def allRoutes: Seq[Routes] = Seq(this, StaticFilesAtWebRoot(staticFiles))
   println(s"xChess server started at port $port")
 
-  val gameRegistry = game.GameRegistry()
+  val gameRegistry = xchess.game.GameRegistry()
 
   /** { "id": "17" }
     * id: optional, if omitted a random ID is used
@@ -26,3 +26,19 @@ object Server extends cask.Main with cask.Routes:
     gameRegistry.newGame(id) match
       case Right(_) => Response(ujson.Obj("id" -> id), 201)
       case Left(cause) => Response(ujson.Obj("cause" -> cause), 400)
+
+  @cask.websocket("/ws/:gameId")
+  def websockets(gameId: String): WebsocketResult =
+    gameRegistry.game(gameId) match
+      case None => Response(ujson.Obj("cause" -> "game not found"), 404)
+      case Some(game) =>
+        WsHandler { ws =>
+          val subscription: xchess.game.Subscription = new xchess.game.Subscription:
+            override def onNext(message: String): Unit = ws.send(Ws.Text(message))
+            override def close(): Unit = ws.send(Ws.Close())
+          game.subscribe(subscription)
+          WsActor {
+            case Ws.Text(message) => game.receiveMessage(message)
+            case Ws.ChannelClosed() => game.unsubscribe(subscription)
+          }
+        }
