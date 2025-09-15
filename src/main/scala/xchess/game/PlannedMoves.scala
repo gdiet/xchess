@@ -8,15 +8,17 @@ import scala.collection.immutable.SortedMap
 
 case class PlannedMoves(
                          board: Board,
+                         private val plans: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)] = Map(),
                          private val boardPlan: Map[Square, PlanId] = Map(),
                          private val timePlan: SortedMap[GameTime, Seq[PlanId]] = SortedMap(),
-                         private val plans: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)] = Map(),
                          private val nextId: PlanId = PlanId.zero
                        ):
 
+  def plannedMoves: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)] = plans
+
   private type Move = (from: Square, to: Square)
   private type PlanReference = (from: Square, forWhite: Boolean)
-
+  
   /** @return planned moves, executed moves, removed plans. */
   final def executePlans(upToTime: GameTime, freezeTime: Long): (PlannedMoves, Seq[Move], Seq[PlanReference] ) =
     timePlan

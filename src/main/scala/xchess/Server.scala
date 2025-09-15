@@ -32,13 +32,14 @@ object Server extends cask.Main with cask.Routes:
         _ => Response(ujson.Obj("id" -> id), 201)
       )
 
-  @cask.websocket("/ws/:gameId")
-  def websockets(gameId: String): WebsocketResult =
+  @cask.websocket("/ws/:gameId/:player")
+  def websockets(gameId: String, player: String): WebsocketResult =
     gameRegistry.game(gameId) match
       case None => Response(ujson.Obj("cause" -> "game not found"), 404)
       case Some(game) =>
         WsHandler { ws =>
           val subscription: xchess.game.Subscription = new xchess.game.Subscription:
+            override def isWhite: Boolean = player.toLowerCase().startsWith("w")
             override def send(message: String): Unit = ws.send(Ws.Text(message))
             override def close(): Unit = ws.send(Ws.Close())
           game.subscribe(subscription)

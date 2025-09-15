@@ -21,6 +21,7 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
   }
 
   private def sendInitialMessages(subscription: Subscription): Unit =
+    subscription.send(s"player ${if subscription.isWhite then "white" else "black"}")
     subscription.send(s"boardsize ${plannedMoves.board.size.string}")
     subscription.send(s"millisPerTick ${options.millisPerTick}")
     subscription.send(s"freezeTicks ${options.freezeTicks}")
@@ -28,7 +29,8 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
     plannedMoves.board.map.foreach((square, entry) =>
       subscription.send(s"add ${square.string} ${entry.piece.value} ${entry.frozenUntil}")
     )
-    // TODO when sending plans, we need to know whether the player is white or black
-    // plan
-    // chat
-    // connected (as status message)
+    plannedMoves.plannedMoves.values.foreach(plan =>
+      if plan.isWhite == subscription.isWhite then subscription.send(s"plan ${plan.from.string} ${plan.to.string}")
+    )
+    // TODO chat
+    subscription.send("connected")
