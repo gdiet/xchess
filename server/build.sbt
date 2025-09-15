@@ -3,8 +3,7 @@ lazy val xchess = project
   .settings(
     name := "xchess",
     version := "current",
-    scalaVersion := "3.3.5", // 3.3.x is LTS
-    scalacOptions ++= Seq("-deprecation", "-unchecked"),
-    libraryDependencies += "com.lihaoyi" %% "cask" % "0.9.7",
-    fork := true
+    scalaVersion := "3.7.1", // 3.7 brings named tuples
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yexplicit-nulls"),
+    libraryDependencies += "com.lihaoyi" %% "cask" % "0.10.2",
   )
