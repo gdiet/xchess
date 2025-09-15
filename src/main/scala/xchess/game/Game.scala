@@ -5,6 +5,7 @@ import Square.string
 class Game(id: String, options: GameOptions): // id only for logging purposes
   private var subscriptions: Set[Subscription] = Set()
   private var plannedMoves: PlannedMoves = PlannedMoves(Board(options))
+  private var chat: List[String] = List()
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     subscriptions += subscription
@@ -17,7 +18,12 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
 
   def receiveMessage(isWhite: Boolean, message: String): Unit = synchronized {
     println(s"[$id] received message: $message")
-    // FIXME implement
+    message.split(" ", 2) match
+      // FIXME implement other cases
+      case Array("chat", message) =>
+        chat = message :: chat.take(4)
+        subscriptions.foreach(_.send(s"chat $message"))
+      case _ => println(s"WARNING - [$id] unknown command: $message")
   }
 
   private def sendInitialMessages(subscription: Subscription): Unit =
@@ -32,5 +38,5 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
     plannedMoves.plannedMoves.values.foreach(plan =>
       if plan.isWhite == subscription.isWhite then subscription.send(s"plan ${plan.from.string} ${plan.to.string}")
     )
-    // TODO chat
+    chat.reverse.foreach(message => subscription.send(s"chat $message"))
     subscription.send("connected")
