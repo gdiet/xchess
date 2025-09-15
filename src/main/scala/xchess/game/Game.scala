@@ -15,7 +15,7 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
     subscriptions -= subscription
   }
 
-  def receiveMessage(message: String): Unit = synchronized {
+  def receiveMessage(isWhite: Boolean, message: String): Unit = synchronized {
     println(s"[$id] received message: $message")
     // FIXME implement
   }

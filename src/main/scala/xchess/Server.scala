@@ -37,14 +37,15 @@ object Server extends cask.Main with cask.Routes:
     gameRegistry.game(gameId) match
       case None => Response(ujson.Obj("cause" -> "game not found"), 404)
       case Some(game) =>
+        val playerIsWhite = !player.toLowerCase().startsWith("b")
         WsHandler { ws =>
           val subscription: xchess.game.Subscription = new xchess.game.Subscription:
-            override def isWhite: Boolean = player.toLowerCase().startsWith("w")
+            override def isWhite: Boolean = playerIsWhite
             override def send(message: String): Unit = ws.send(Ws.Text(message))
             override def close(): Unit = ws.send(Ws.Close())
           game.subscribe(subscription)
           WsActor {
-            case Ws.Text(message) => game.receiveMessage(message)
+            case Ws.Text(message) => game.receiveMessage(playerIsWhite, message)
             case Ws.ChannelClosed() => game.unsubscribe(subscription)
           }
         }
