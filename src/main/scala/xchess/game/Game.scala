@@ -37,6 +37,16 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
         chat = message :: chat.take(4)
         broadcast(s"chat $message")
 
+      case Array("plan", move) =>
+        move.split(" ") match
+          case Array(from, to) =>
+            plannedMoves.plan(Square(from), Square(to), isWhite, clock.time + 1) match
+              case None => println(s"WARNING - [$id] invalid plan command: $move")
+              case Some((newPlannedMoves, plannedTime)) =>
+                plannedMoves = newPlannedMoves
+                broadcast(s"plan $from $to ${clock.millisUntil(plannedTime)}", isWhite)
+          case _ => println(s"WARNING - [$id] invalid plan command syntax: $move")
+
       case _ => println(s"WARNING - [$id] unknown command: $message")
   }
 

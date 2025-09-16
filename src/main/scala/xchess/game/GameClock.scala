@@ -12,7 +12,4 @@ class GameClock(val millisPerTick: Long):
   def start(): Unit = stoppedAt.foreach { stopped => offsetToUnixTime += now - stopped; stoppedAt = None }
   def timeMillis: Long = stoppedAt.fold(now - offsetToUnixTime)(_ - offsetToUnixTime)
   def time: GameTime = GameTime(timeMillis / millisPerTick)
-
-  def millisUntil(time: GameTime): Option[Long] =
-    if stoppedAt.isDefined then None
-    else Some(time.value * millisPerTick - (now - offsetToUnixTime))
+  def millisUntil(time: GameTime): Long = time.value * millisPerTick - timeMillis
