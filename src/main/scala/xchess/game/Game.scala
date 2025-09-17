@@ -1,13 +1,18 @@
 package xchess.game
 
-import Square.string
+import xchess.game.Square.string
+
+import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 // All public methods must be synchronized
-class Game(id: String, options: GameOptions): // id only for logging purposes
+class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService): // id only for logging purposes
+  private val clock = GameClock(options.millisPerTick)
+
   private var subscriptions: Set[Subscription] = Set()
   private var plannedMoves: PlannedMoves = PlannedMoves(Board(options))
   private var chat: List[String] = List()
-  private val clock = GameClock(options.millisPerTick)
+  private var nextScheduledMove: Option[(time: GameTime, future: ScheduledFuture[Unit])] = None
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     println(s"[$id] subscribed: white = ${subscription.isWhite}")
@@ -26,11 +31,17 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
       // FIXME implement other cases
 
       case Array("start") =>
-        clock.start()
+        if clock.start() then
+          plannedMoves.timeOfNextPlan.foreach { time => scheduler.schedule(
+            new Runnable { override def run(): Unit = advance() },
+            clock.millisUntil(time), MILLISECONDS
+          ) }
         broadcast("start")
 
       case Array("stop") =>
-        clock.stop()
+        if clock.stop() then
+          nextScheduledMove.foreach(_.future.cancel(false))
+          nextScheduledMove = None
         broadcast("stop")
 
       case Array("chat", message) =>
@@ -48,6 +59,22 @@ class Game(id: String, options: GameOptions): // id only for logging purposes
           case _ => println(s"WARNING - [$id] invalid plan command syntax: $move")
 
       case _ => println(s"WARNING - [$id] unknown command: $message")
+  }
+
+  private def advance(): Unit = synchronized {
+    println(s"[$id] advancing game at ${clock.time}")
+    // FIXME continue
+//    val time = clock.time
+//    val (newPlannedMoves, moves) = plannedMoves.executeScheduledMoves(time)
+//    plannedMoves = newPlannedMoves
+//    moves.foreach((from, to) => broadcast(s"move ${from.string} ${to.string}"))
+//    broadcast(s"advance $time")
+//    nextScheduledMove = None
+//    plannedMoves.timeOfNextPlan.foreach { nextTime =>
+//      val delay = clock.millisUntil(nextTime)
+//      val future = scheduler.schedule(() => advance(), delay, java.util.concurrent.TimeUnit.MILLISECONDS)
+//      nextScheduledMove = Some((nextTime, future))
+//    }
   }
 
   private def send(subscription: Subscription, message: String): Unit =

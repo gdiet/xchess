@@ -14,6 +14,7 @@ case class PlannedMoves(
                          private val nextId: PlanId = PlanId.zero
                        ):
 
+  def timeOfNextPlan: Option[GameTime] = timePlan.keysIterator.nextOption
   def plannedMoves: Map[PlanId, (isWhite: Boolean, from: Square, to: Square, time: GameTime)] = plans
 
   private type Move = (from: Square, to: Square)
