@@ -12,10 +12,8 @@ class PlannedMovesTest extends munit.FunSuite:
       Square("E3") -> bPawn,
     ))
     val stage1 = PlannedMoves(board)
-    val (stage2, time2) = stage1.plan(Square("C1"), Square("E3"), forWhite = true, GameTime(0)).get
-    assertEquals(time2, time)
-    val (stage3, time3) = stage2.plan(Square("E3"), Square("D3"), forWhite = false, time).get
-    assertEquals(time3, time)
+    val stage2 = stage1.plan(Square("C1"), Square("E3"), forWhite = true, GameTime(0)).get
+    val stage3 = stage2.plan(Square("E3"), Square("D3"), forWhite = false, time).get
     val (stage4, executedMoves, removedPlans) = stage3.executePlans(time + 3, 3)
     assertEquals(executedMoves, Seq((Square("C1"), Square("E3"))))
     assertEquals(removedPlans, Seq((Square("C1"), true), (Square("E3"), false)))

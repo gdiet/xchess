@@ -12,7 +12,7 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
   private var subscriptions: Set[Subscription] = Set()
   private var plannedMoves: PlannedMoves = PlannedMoves(Board(options))
   private var chat: List[String] = List()
-  private var nextScheduledMove: Option[(time: GameTime, future: ScheduledFuture[Unit])] = None
+  private var nextScheduledMove: Option[(time: GameTime, future: ScheduledFuture[?])] = None
 
   def subscribe(subscription: Subscription): Unit = synchronized {
     println(s"[$id] subscribed: white = ${subscription.isWhite}")
@@ -31,11 +31,7 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
       // FIXME implement other cases
 
       case Array("start") =>
-        if clock.start() then
-          plannedMoves.timeOfNextPlan.foreach { time => scheduler.schedule(
-            new Runnable { override def run(): Unit = advance() },
-            clock.millisUntil(time), MILLISECONDS
-          ) }
+        if clock.start() then scheduleNextMove()
         broadcast("start")
 
       case Array("stop") =>
@@ -53,28 +49,42 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
           case Array(from, to) =>
             plannedMoves.plan(Square(from), Square(to), isWhite, clock.time + 1) match
               case None => println(s"WARNING - [$id] invalid plan command: $move")
-              case Some((newPlannedMoves, plannedTime)) =>
+              case Some(newPlannedMoves) =>
                 plannedMoves = newPlannedMoves
-                broadcast(s"plan $from $to ${clock.millisUntil(plannedTime)}", isWhite)
+                broadcast(s"plan $from $to", isWhite)
+                if !clock.isStopped then scheduleNextMove()
           case _ => println(s"WARNING - [$id] invalid plan command syntax: $move")
 
       case _ => println(s"WARNING - [$id] unknown command: $message")
   }
 
+  private def scheduleNextMove(): Unit =
+    plannedMoves.timeOfNextPlan.foreach { time =>
+      def doSchedule(): Unit =
+        nextScheduledMove = Some((time, scheduler.schedule(
+          new Runnable { override def run(): Unit = advance() }, clock.millisUntil(time), MILLISECONDS
+        )))
+      nextScheduledMove match
+        case Some((scheduledTime, scheduledFuture)) =>
+          if scheduledTime > time then
+            scheduledFuture.cancel(false)
+            doSchedule()
+          else { } /* keep current schedule */
+        case None =>
+          doSchedule()
+    }
+
   private def advance(): Unit = synchronized {
-    println(s"[$id] advancing game at ${clock.time}")
-    // FIXME continue
-//    val time = clock.time
-//    val (newPlannedMoves, moves) = plannedMoves.executeScheduledMoves(time)
-//    plannedMoves = newPlannedMoves
-//    moves.foreach((from, to) => broadcast(s"move ${from.string} ${to.string}"))
-//    broadcast(s"advance $time")
-//    nextScheduledMove = None
-//    plannedMoves.timeOfNextPlan.foreach { nextTime =>
-//      val delay = clock.millisUntil(nextTime)
-//      val future = scheduler.schedule(() => advance(), delay, java.util.concurrent.TimeUnit.MILLISECONDS)
-//      nextScheduledMove = Some((nextTime, future))
-//    }
+    val time = clock.time
+    println(s"[$id] advancing game at $time")
+    val (newPlannedMoves, executedMoves, removedPlans) = plannedMoves.executePlans(time, options.freezeTicks)
+    plannedMoves = newPlannedMoves
+    removedPlans.foreach(plan =>
+      broadcast(s"remove ${plan.from.string}", plan.forWhite)
+    )
+    executedMoves.foreach(move =>
+      broadcast(s"move ${move.from.string} ${move.to.string} ${time.value + options.freezeTicks}")
+    )
   }
 
   private def send(subscription: Subscription, message: String): Unit =

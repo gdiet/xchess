@@ -21,16 +21,16 @@ case class PlannedMoves(
   private type PlanReference = (from: Square, forWhite: Boolean)
   
   /** @return planned moves, executed moves, removed plans. */
-  final def executePlans(upToTime: GameTime, freezeTime: Long): (PlannedMoves, Seq[Move], Seq[PlanReference] ) =
+  final def executePlans(upToTime: GameTime, freezeTicks: Long): (PlannedMoves, Seq[Move], Seq[PlanReference] ) =
     timePlan
       .takeWhile { case (time, _) => time <= upToTime }
       .foldLeft((this, Seq[Move](), Seq[PlanReference]())) {
         case ((currentPlannedMoves, executedMoves, removedPlans), (time, planIds)) =>
-          val (nextPlannedMoves, executed, removed) = executePlans(time, planIds, freezeTime)
+          val (nextPlannedMoves, executed, removed) = executePlans(time, planIds, freezeTicks)
           (nextPlannedMoves, executedMoves ++ executed, removedPlans ++ removed)
       }
 
-  private def executePlans(time: GameTime, planIds: Seq[PlanId], freezeTime: Long):
+  private def executePlans(time: GameTime, planIds: Seq[PlanId], freezeTicks: Long):
         (PlannedMoves, Seq[Move], Seq[PlanReference]) =
     val whiteFirst = time.whiteFirst
     val plansToExecute = planIds.flatMap(plans.get)
@@ -39,7 +39,7 @@ case class PlannedMoves(
       interleave(first, second).foldLeft((board, Seq[Move]())) {
         case ((currentBoard, currentMoves), (_, from, to, _)) =>
           if (currentMoves.exists(_.to == from)) (currentBoard, currentMoves) // piece was captured
-          else currentBoard.executeMove(from, to, time + freezeTime) match
+          else currentBoard.executeMove(from, to, time + freezeTicks) match
             case None => (currentBoard, currentMoves)
             case Some((newBoard, target)) => (newBoard, currentMoves :+ (from, target))
       }
@@ -56,13 +56,13 @@ case class PlannedMoves(
   /** Plans a move for a player if possible.
     *
     * @return planned moves + planned time for the move, or None for invalid plan. */
-  def plan(from: Square, to: Square, forWhite: Boolean, earliestTime: GameTime): Option[(PlannedMoves, GameTime)] =
+  def plan(from: Square, to: Square, forWhite: Boolean, earliestTime: GameTime): Option[PlannedMoves] =
     assert(from != to)
     if !board.size.contains(to) then None
     else board.map.get(from).flatMap { case (piece, frozenUntil) =>
       if piece.isWhite != forWhite then None else
         val time = max(frozenUntil, earliestTime)
-        Some((addPlannedMove(piece, from, to, time), time))
+        Some(addPlannedMove(piece, from, to, time))
     }
 
   private def addPlannedMove(piece: Piece, from: Square, to: Square, time: GameTime): PlannedMoves =
