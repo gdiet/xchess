@@ -4,11 +4,35 @@ import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mj
 
 const game = new URLSearchParams(window.location.search).get('game') || 'test'
 const white = new URLSearchParams(window.location.search).get('color') != 'black'
-console.log(`xChess game '${game}' as ${white ? 'white' : 'black'}`)
+const color = white ? 'white' : 'black'
+console.log(`xChess game '${game}' as ${color}`)
 
 const pixi = new Application()
 await pixi.init({ background: '#1099bb', resizeTo: document.body })
 document.body.replaceChildren(pixi.canvas)
+
+/** @type {WebSocket} */
+const ws = new WebSocket(`${window.location.protocol.replace("http","ws")}//${window.location.host}/ws/${game}/${color}`)
+ws.onopen  = _ => console.log(`websocket opened`)
+ws.onerror = _ => console.log(`websocket error`) // maybe add: location.href = "notfound.html" + window.location.search
+ws.onclose = _ => console.log(`websocket closed`)
+
+ws.onmessage = receiveClockInitialization
+
+/** @param {MessageEvent} event */
+function receiveClockInitialization(event) {
+  console.log(`websocket message 1: ${event.data}`)
+  ws.onmessage = receiveBoardSize(10)
+}
+
+/** @param {Number} clock
+ * @returns {function(MessageEvent): void}
+ */
+function receiveBoardSize(clock) { return event => {
+  console.log(`websocket message 2: ${event.data}`)
+  ws.onmessage = _ => {}
+}}
+
 
 const cols = 10
 const rows = 8
@@ -30,13 +54,12 @@ pixi.stage.addChild(chessBoardContainer)
 await loadImages()
 
 // FIXME demo code, remove soon
-// add board to container, resize container
-// possibly invert coordinats like: container.scale.y = -1
+// possibly invert coordinats like: container.scale.y = -1 => probably too much trouble, position sprites correctly instead
 const mySprite = new Sprite(Assets.get("P"));
 mySprite.setSize(1, 1);
 mySprite.x = 0
 mySprite.y = 7
-chessBoard.addChild(mySprite);
+chessBoardContainer.addChild(mySprite);
 
 async function loadImages() {
   await Promise.all("BKNPQR".split("").map(async piece => {
