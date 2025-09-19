@@ -1,10 +1,10 @@
 // @ts-check
 
-import { Application, Assets, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
+import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
 
-const gameId = new URLSearchParams(window.location.search).get('game') || 'test'
-const isWhite = new URLSearchParams(window.location.search).get('color') != 'black'
-console.log(`xChess game '${gameId}' as ${isWhite ? 'white' : 'black'}`)
+const game = new URLSearchParams(window.location.search).get('game') || 'test'
+const white = new URLSearchParams(window.location.search).get('color') != 'black'
+console.log(`xChess game '${game}' as ${white ? 'white' : 'black'}`)
 
 const pixi = new Application()
 await pixi.init({ background: '#1099bb', resizeTo: document.body })
@@ -21,7 +21,11 @@ for (var x = 0; x < cols; x++)
 for (var y = x%2; y < rows; y += 2)
   chessBoard.rect(x, y, 1, 1)
 chessBoard.fill(0xa0a0a0)
-pixi.stage.addChild(chessBoard)
+
+const chessBoardContainer = new Container()
+chessBoardContainer.addChild(chessBoard)
+
+pixi.stage.addChild(chessBoardContainer)
 
 await loadImages()
 
@@ -50,8 +54,8 @@ function resizeChessBoard(cols, rows) {
   const xBound = pixi.canvas.width * 0.9
   const yBound = pixi.canvas.height * 0.9
   const scale = Math.min(xBound / cols, yBound / rows)
-  chessBoard.x = (pixi.canvas.width / scale - cols) / 2
-  chessBoard.y = (pixi.canvas.height / scale - rows) / 2
+  chessBoardContainer.x = (pixi.canvas.width / scale - cols) / 2
+  chessBoardContainer.y = (pixi.canvas.height / scale - rows) / 2
   pixi.stage.scale.set(scale)
 }
 
