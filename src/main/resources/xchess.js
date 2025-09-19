@@ -148,15 +148,7 @@ function add(board, boardContainer, square, piece, freezeUntil) {
   const sprite = new Sprite(Assets.get(piece));
   sprite.width = 1
   sprite.height = 1
-  sprite.x = col
-  sprite.y = row // TODO or (boardContainer.height - 1) - row // invert y axis
+  if (white) { sprite.x = col; sprite.y = (boardContainer.height - 1) - row }
+  else { sprite.x = (boardContainer.width - 1) - col; sprite.y = row }
   boardContainer.addChild(sprite)
 }
-
-// FIXME demo code, remove soon
-// possibly invert coordinats like: container.scale.y = -1 => probably too much trouble, position sprites correctly instead
-// const mySprite = new Sprite(Assets.get("P"));
-// mySprite.setSize(1, 1);
-// mySprite.x = 0
-// mySprite.y = 7
-// chessBoardContainer.addChild(mySprite);
