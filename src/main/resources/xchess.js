@@ -173,7 +173,7 @@ function plan(state, from, to) {
   const [toCol, toRow] = coordinates(state, to)
   const length = Math.sqrt((toRow - fromRow)**2 + (toCol - fromCol)**2)
   const arrow = new Graphics({})
-  arrow.poly([0,0, 2,-1, 1.5,-.3, length,-.3, length,.3, 1.5,.3, 2,1, 0,0])
+  arrow.poly([0,0, 0.5,-.2, 0.35,-.075, length,-.075, length,.075, 0.35,.075, 0.5,.2, 0,0])
   arrow.fill(0xe30dee)
   arrow.position.x = .5 + toCol
   arrow.position.y = .5 + toRow
