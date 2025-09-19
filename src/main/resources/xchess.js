@@ -16,8 +16,8 @@ document.body.replaceChildren(pixi.canvas)
 
 // Load piece images
 await Promise.all("BKNPQR".split("").map(async piece => {
-  await Assets.load({ alias: piece,               src: `cardinal/w${piece}.svg`, data: { resolution: 2 } });
-  await Assets.load({ alias: piece.toLowerCase(), src: `cardinal/b${piece}.svg`, data: { resolution: 2 } });
+  await Assets.load({ alias: piece,               src: `pieces/w${piece}.svg`, data: { resolution: 2 } });
+  await Assets.load({ alias: piece.toLowerCase(), src: `pieces/b${piece}.svg`, data: { resolution: 2 } });
 }));
 console.log(`images loaded`)
 
@@ -47,9 +47,7 @@ function receiveBoardSize(clock) { return event => {
   const [time, _board, _size, size, _freeze, freeze] = event.data.split(" ")
   checkSync(clock, time)
   console.log(`board size is ${size}, freeze time is ${freeze} ticks`)
-  const [maxCol, maxRow] = squareCoordinates(size)
-  const cols = maxCol + 1
-  const rows = maxRow + 1
+  const [cols, rows] = squareCoordinates(size).map(x => x + 1)
   const boardContainer = chessBoard(cols, rows)
   pixi.stage.addChild(boardContainer)
   resizeChessBoard(boardContainer, cols, rows)
