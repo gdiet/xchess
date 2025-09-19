@@ -1,6 +1,7 @@
 // @ts-check
 import { Application, Assets, Container, Graphics } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
-import { GameClock } from './GameClock.js'
+import { Clock } from './Clock.js'
+import { Board } from './Board.js'
 
 // Get game and color from URL parameters
 const game = new URLSearchParams(window.location.search).get('game') || 'test'
@@ -32,14 +33,14 @@ ws.onmessage = receiveClockInitialization
 /** @param {MessageEvent<string>} event */
 function receiveClockInitialization(event) {
   const [time, _clock, millisPerTick, _millis, stopped] = event.data.split(" ")
-  const clock = new GameClock(Number(time), Number(millisPerTick), stopped === "stopped")
+  const clock = new Clock(Number(time), Number(millisPerTick), stopped === "stopped")
   console.log(`clock at ${clock.timeMillis} millis ${stopped} with ${clock.millisPerTick} millis per tick`)
   ws.onmessage = receiveBoardSize(clock)
 }
 
 // Receive board initialization message and set up the chess board
 /**
- * @param {GameClock} clock
+ * @param {Clock} clock
  * @returns {function(MessageEvent<string>): void}
  */
 function receiveBoardSize(clock) { return event => {
@@ -58,7 +59,7 @@ function receiveBoardSize(clock) { return event => {
 
 // Check whether the client clock is in sync with the server clock
 /**
- * @param {GameClock} clock
+ * @param {Clock} clock
  * @param {string} time
  */
 function checkSync(clock, time) {
@@ -108,24 +109,16 @@ function resizeChessBoard(chessBoardContainer,cols, rows) {
   pixi.stage.scale.set(scale)
 }
 
+// Receive board initialization message and set up the chess board
+/**
+ * @param {Clock} clock
+ * @param {Board} board
+ * @returns {function(MessageEvent<string>): void}
+ */
+function receiveGameMessage(clock, board) { return event => {
+} }
 
 
-// const cols = 10
-// const rows = 8
-
-// const chessBoard = new Graphics({})
-// chessBoard.rect(0, 0, cols, rows)
-// chessBoard.fill(0x282020)
-// // Add the checkers
-// for (var x = 0; x < cols; x++)
-// for (var y = x%2; y < rows; y += 2)
-//   chessBoard.rect(x, y, 1, 1)
-// chessBoard.fill(0xa0a0a0)
-
-// const chessBoardContainer = new Container()
-// chessBoardContainer.addChild(chessBoard)
-
-// pixi.stage.addChild(chessBoardContainer)
 
 // FIXME demo code, remove soon
 // possibly invert coordinats like: container.scale.y = -1 => probably too much trouble, position sprites correctly instead

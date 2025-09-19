@@ -1,6 +1,6 @@
 // @ts-check
 
-export class GameClock {
+export class Clock {
   /** @type {number} */
   #millisPerTick
   
