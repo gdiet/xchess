@@ -99,9 +99,8 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
     subscriptions.foreach(subscription => if subscription.isWhite == forWhite then subscription.send(out))
 
   private def sendInitialMessages(subscription: Subscription): Unit =
-    send(subscription, s"clock ${clock.time} ${if clock.isStopped then "stopped" else "running"}")
-    send(subscription, s"player ${if subscription.isWhite then "white" else "black"}")
     send(subscription, s"boardsize ${plannedMoves.board.size.string}")
+    send(subscription, s"clock ${clock.time} ${if clock.isStopped then "stopped" else "running"}")
     send(subscription, s"millisPerTick ${options.millisPerTick}")
     send(subscription, s"freezeTicks ${options.freezeTicks}")
     plannedMoves.board.map.foreach((square, entry) =>
