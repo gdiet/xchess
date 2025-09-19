@@ -2,13 +2,13 @@
 
 export class GameClock {
   /** @type {number} */
-  millisPerTick
+  #millisPerTick
   
   /** @type {number} */
-  offsetToUnixTime
+  #offsetToUnixTime
   
   /** @type {number | undefined} */
-  stoppedAt
+  #stoppedAt
 
   /**
    * @param {number} timeMillis
@@ -16,29 +16,33 @@ export class GameClock {
    * @param {boolean} stopped
    */
   constructor(timeMillis, millisPerTick, stopped) {
-    this.millisPerTick = millisPerTick
-    this.offsetToUnixTime = Date.now() - timeMillis
-    if (stopped) this.stoppedAt = this.offsetToUnixTime + timeMillis
+    this.#millisPerTick = millisPerTick
+    this.#offsetToUnixTime = Date.now() - timeMillis
+    if (stopped) this.#stoppedAt = this.#offsetToUnixTime + timeMillis
   }
 
   stop() {
-    if (this.stoppedAt === undefined) this.stoppedAt = Date.now()
+    if (this.#stoppedAt === undefined) this.#stoppedAt = Date.now()
   }
 
   start() {
-    if (this.stoppedAt !== undefined) {
-      this.offsetToUnixTime += Date.now() - this.stoppedAt
-      this.stoppedAt = undefined
+    if (this.#stoppedAt !== undefined) {
+      this.#offsetToUnixTime += Date.now() - this.#stoppedAt
+      this.#stoppedAt = undefined
     }
   }
 
+  get millisPerTick() {
+    return this.#millisPerTick
+  }
+
   get timeMillis() {
-    if (this.stoppedAt === undefined) return Date.now() - this.offsetToUnixTime
-    else return this.stoppedAt - this.offsetToUnixTime
+    if (this.#stoppedAt === undefined) return Date.now() - this.#offsetToUnixTime
+    else return this.#stoppedAt - this.#offsetToUnixTime
   }
 
   get time() {
-    return Math.floor(this.timeMillis / this.millisPerTick)
+    return Math.floor(this.timeMillis / this.#millisPerTick)
   }
 
   /**
@@ -46,6 +50,6 @@ export class GameClock {
    * @returns {number} milliseconds until the given game time
    */
   millisUntil(gameTime) {
-    return gameTime * this.millisPerTick - this.timeMillis
+    return gameTime * this.#millisPerTick - this.timeMillis
   }
 }

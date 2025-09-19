@@ -33,7 +33,7 @@ ws.onmessage = receiveClockInitialization
 function receiveClockInitialization(event) {
   const [time, _clock, millisPerTick, _millis, stopped] = event.data.split(" ")
   const clock = new GameClock(Number(time), Number(millisPerTick), stopped === "stopped")
-  console.log(`clock at ${clock.timeMillis} millis ${stopped}, tick is ${clock.millisPerTick} millis`)
+  console.log(`clock at ${clock.timeMillis} millis ${stopped} with ${clock.millisPerTick} millis per tick`)
   ws.onmessage = receiveBoardSize(clock)
 }
 
