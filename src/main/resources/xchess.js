@@ -1,6 +1,7 @@
 // @ts-check
 
 import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
+import { GameClock } from './GameClock.js'
 
 const game = new URLSearchParams(window.location.search).get('game') || 'test'
 const white = new URLSearchParams(window.location.search).get('color') != 'black'
@@ -19,20 +20,32 @@ ws.onclose = _ => console.log(`websocket closed`)
 
 ws.onmessage = receiveClockInitialization
 
-/** @param {MessageEvent} event */
+/** @param {MessageEvent<string>} event */
 function receiveClockInitialization(event) {
-  console.log(`websocket message 1: ${event.data}`)
-  ws.onmessage = receiveBoardSize(10)
+  const [time, _clock, millisPerTick, _millis, stopped] = event.data.split(" ")
+  const clock = new GameClock(Number(time), Number(millisPerTick), stopped === "stopped")
+  console.log(`clock at ${clock.timeMillis} millis ${stopped}, tick is ${clock.millisPerTick} millis`)
+  ws.onmessage = receiveBoardSize(clock)
 }
 
-/** @param {Number} clock
- * @returns {function(MessageEvent): void}
+/**
+ * @param {GameClock} clock
+ * @returns {function(MessageEvent<string>): void}
  */
 function receiveBoardSize(clock) { return event => {
-  console.log(`websocket message 2: ${event.data}`)
-  ws.onmessage = _ => {}
-}}
+  const [time, _board, _size, size, _freeze, freeze] = event.data.split(" ")
+  checkSync(clock, time)
+  console.log(`board size is ${size}, freeze is ${freeze}`)
+  ws.onmessage = _ => {} // FIXME continue
+} }
 
+/**
+ * @param {GameClock} clock
+ * @param {string} time
+ */
+function checkSync(clock, time) {
+  if (clock.timeMillis !== Number(time)) console.warn(`clock desync: ${clock.timeMillis} != ${Number(time)}`)
+}
 
 const cols = 10
 const rows = 8
