@@ -1,7 +1,8 @@
 // @ts-check
 import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
-import { Clock } from './Clock.js'
 import { Board } from './Board.js'
+import { Clock } from './Clock.js'
+import { State } from './State.js'
 
 // Get game and color from URL parameters
 const game = new URLSearchParams(window.location.search).get('game') || 'test'
@@ -47,14 +48,16 @@ function receiveBoardSize(clock) { return event => {
   const [time, _board, _size, size, _freeze, freeze] = event.data.split(" ")
   checkSync(clock, time)
   console.log(`board size is ${size}, freeze time is ${freeze} ticks`)
-  const [cols, rows] = squareCoordinates(size).map(x => x + 1)
+  const [maxCol, maxRow] = parseSquare(size)
+  const [cols, rows] = [maxCol + 1, maxRow + 1]
   const boardContainer = chessBoard(cols, rows)
   pixi.stage.addChild(boardContainer)
   resizeChessBoard(boardContainer, cols, rows)
   // When the window is maximized/restored, the resize event may fire too early.
   // The zero timeout ensures that resizeChessBoard is called after the resize is done.
   window.addEventListener('resize', () => { setTimeout(() => resizeChessBoard(boardContainer, cols, rows), 0); })
-  ws.onmessage = receiveGameMessage(clock, new Board(), boardContainer)
+  const state = new State(clock, maxCol, maxRow, new Board(), boardContainer)
+  ws.onmessage = receiveGameMessage(state)
 } }
 
 // Check whether the client clock is in sync with the server clock
@@ -70,10 +73,21 @@ function checkSync(clock, time) {
  * @param {string} squareString - Chess square (e.g., "A1", "H8", or even "K14")
  * @returns {[number, number]} [column, row] (0-based)
  */
-function squareCoordinates(squareString) {
+function parseSquare(squareString) {
   const col = squareString.charCodeAt(0) - 'A'.charCodeAt(0)
   const row = parseInt(squareString.slice(1)) - 1
   return [col, row]
+}
+
+/**
+ * @param {State} state
+ * @param {string} squareString - Chess square (e.g., "A1", "H8", or even "K14")
+ * @returns {[number, number]} graphics coordinates [x, y] of the square
+ */
+function coordinates(state, squareString) {
+  const [col, row] = parseSquare(squareString)
+  if (white) return [col, state.maxRow - row]
+  else return [state.maxCol - col, row]
 }
 
 /**
@@ -111,47 +125,42 @@ function resizeChessBoard(chessBoardContainer,cols, rows) {
 
 // Main message handler for game updates
 /**
- * @param {Clock} clock
- * @param {Board} board
- * @param {Container} boardContainer
+ * @param {State} state
  * @returns {function(MessageEvent<string>): void}
  */
-function receiveGameMessage(clock, board, boardContainer) { return event => {
+function receiveGameMessage(state) { return event => {
   const [time, command, ...args] = event.data.split(" ")
-  checkSync(clock, time)
+  checkSync(state.clock, time)
   switch(command) {
     case "add":
       const [square, piece, freezeUntil] = args
-      add(board, boardContainer, square, piece, Number(freezeUntil))
+      add(state, square, piece, Number(freezeUntil))
       break
     case "chat":
       console.log(`chat message: ${args.join(" ")}`)
       break
     default:
-      plan(boardContainer, "D7", "D5") // FIXME demo code, remove soon
+      plan(state.boardContainer, "D7", "D5") // FIXME demo code, remove soon
       console.warn(`unknown command: ${command}`)
   }
 } }
 
 /**
  * Add a piece to the board and display it in the container.
- * 
- * @param {Board} board
- * @param {Container} boardContainer
+ *
+ * @param {State} state
  * @param {string} square - Chess square (e.g., "A1", "H8", or even "K14")
  * @param {string} piece - The piece to place (e.g., "K", "q")
  * @param {number} freezeUntil - Game time until which this square is frozen
  */
-function add(board, boardContainer, square, piece, freezeUntil) {
+function add(state, square, piece, freezeUntil) {
   console.log(`add ${piece} on ${square}, freeze until ${freezeUntil}`)
-  const [col, row] = squareCoordinates(square)
-  board.set(col, row, piece, freezeUntil)
-  const sprite = new Sprite(Assets.get(piece));
-  sprite.width = 1
-  sprite.height = 1
-  if (white) { sprite.x = col; sprite.y = (boardContainer.height - 1) - row }
-  else { sprite.x = (boardContainer.width - 1) - col; sprite.y = row }
-  boardContainer.addChild(sprite)
+  const [col, row] = coordinates(state, square)
+  state.board.set(col, row, piece, freezeUntil)
+  const sprite = new Sprite(Assets.get(piece))
+  sprite.setSize(1, 1)
+  sprite.position.set(col, row)
+  state.boardContainer.addChild(sprite)
 }
 
 /**
@@ -160,8 +169,8 @@ function add(board, boardContainer, square, piece, freezeUntil) {
  * @param {string} to - e.g. "D5"
  */
 function plan(boardContainer, from, to) {
-  const [fromCol, fromRow] = squareCoordinates(from)
-  const [toCol, toRow] = squareCoordinates(to)
+  const [fromCol, fromRow] = parseSquare(from)
+  const [toCol, toRow] = parseSquare(to)
   // const xc = { size: boardContainer.width, Y: y => (boardContainer.height - 1) - y } // coordinate transform for black
   // const unit = xc.size / 12
   const length = Math.sqrt((toRow - fromRow)**2 + (toCol - fromCol)**2)
