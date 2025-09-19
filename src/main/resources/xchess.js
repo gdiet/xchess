@@ -140,7 +140,7 @@ function receiveGameMessage(state) { return event => {
       console.log(`chat message: ${args.join(" ")}`)
       break
     default:
-      plan(state.boardContainer, "D7", "D5") // FIXME demo code, remove soon
+      plan(state, "D7", "D5") // FIXME demo code, remove soon
       console.warn(`unknown command: ${command}`)
   }
 } }
@@ -164,15 +164,13 @@ function add(state, square, piece, freezeUntil) {
 }
 
 /**
- * @param {Container} boardContainer
+ * @param {State} state
  * @param {string} from - e.g. "D7"
  * @param {string} to - e.g. "D5"
  */
-function plan(boardContainer, from, to) {
-  const [fromCol, fromRow] = parseSquare(from)
-  const [toCol, toRow] = parseSquare(to)
-  // const xc = { size: boardContainer.width, Y: y => (boardContainer.height - 1) - y } // coordinate transform for black
-  // const unit = xc.size / 12
+function plan(state, from, to) {
+  const [fromCol, fromRow] = coordinates(state, from)
+  const [toCol, toRow] = coordinates(state, to)
   const length = Math.sqrt((toRow - fromRow)**2 + (toCol - fromCol)**2)
   const arrow = new Graphics({})
   arrow.poly([0,0, 2,-1, 1.5,-.3, length,-.3, length,.3, 1.5,.3, 2,1, 0,0])
@@ -180,6 +178,6 @@ function plan(boardContainer, from, to) {
   arrow.position.x = .5 + toCol
   arrow.position.y = .5 + toRow
   arrow.rotation = Math.atan2(fromRow - toRow, fromCol - toCol)
-  boardContainer.addChild(arrow)
+  state.boardContainer.addChild(arrow)
 }
 
