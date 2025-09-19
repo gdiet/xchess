@@ -1,5 +1,5 @@
 // @ts-check
-import { Application, Assets, Container, Graphics } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
+import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
 import { Clock } from './Clock.js'
 import { Board } from './Board.js'
 
@@ -47,14 +47,16 @@ function receiveBoardSize(clock) { return event => {
   const [time, _board, _size, size, _freeze, freeze] = event.data.split(" ")
   checkSync(clock, time)
   console.log(`board size is ${size}, freeze time is ${freeze} ticks`)
-  const [cols, rows] = squareNumbers(size)
-  const chessBoardContainer = chessBoard(cols, rows)
-  pixi.stage.addChild(chessBoardContainer)
-  resizeChessBoard(chessBoardContainer, cols, rows)
+  const [maxCol, maxRow] = squareCoordinates(size)
+  const cols = maxCol + 1
+  const rows = maxRow + 1
+  const boardContainer = chessBoard(cols, rows)
+  pixi.stage.addChild(boardContainer)
+  resizeChessBoard(boardContainer, cols, rows)
   // When the window is maximized/restored, the resize event may fire too early.
   // The zero timeout ensures that resizeChessBoard is called after the resize is done.
-  window.addEventListener('resize', () => { setTimeout(() => resizeChessBoard(chessBoardContainer, cols, rows), 0); })
-  ws.onmessage = _ => {} // FIXME continue
+  window.addEventListener('resize', () => { setTimeout(() => resizeChessBoard(boardContainer, cols, rows), 0); })
+  ws.onmessage = receiveGameMessage(clock, new Board(), boardContainer)
 } }
 
 // Check whether the client clock is in sync with the server clock
@@ -70,7 +72,7 @@ function checkSync(clock, time) {
  * @param {string} squareString - Chess square (e.g., "A1", "H8", or even "K14")
  * @returns {[number, number]} [column, row] (0-based)
  */
-function squareNumbers(squareString) {
+function squareCoordinates(squareString) {
   const col = squareString.charCodeAt(0) - 'A'.charCodeAt(0)
   const row = parseInt(squareString.slice(1)) - 1
   return [col, row]
@@ -87,8 +89,8 @@ function chessBoard(cols, rows) {
   chessBoard.fill(0x282020)
   // Add the checkers
   for (var x = 0; x < cols; x++)
-  for (var y = x%2; y < rows; y += 2)
-    chessBoard.rect(x, y, 1, 1)
+    for (var y = x%2; y < rows; y += 2)
+      chessBoard.rect(x, y, 1, 1)
   chessBoard.fill(0xa0a0a0)
   const container = new Container()
   container.addChild(chessBoard)
@@ -109,16 +111,49 @@ function resizeChessBoard(chessBoardContainer,cols, rows) {
   pixi.stage.scale.set(scale)
 }
 
-// Receive board initialization message and set up the chess board
+// Main message handler for game updates
 /**
  * @param {Clock} clock
  * @param {Board} board
+ * @param {Container} boardContainer
  * @returns {function(MessageEvent<string>): void}
  */
-function receiveGameMessage(clock, board) { return event => {
+function receiveGameMessage(clock, board, boardContainer) { return event => {
+  const [time, command, ...args] = event.data.split(" ")
+  checkSync(clock, time)
+  switch(command) {
+    case "add":
+      const [square, piece, freezeUntil] = args
+      add(board, boardContainer, square, piece, Number(freezeUntil))
+      break
+    case "chat":
+      console.log(`chat message: ${args.join(" ")}`)
+      break
+    default:
+      console.warn(`unknown command: ${command}`)
+  }
 } }
 
-
+/**
+ * Add a piece to the board and display it in the container.
+ * 
+ * @param {Board} board
+ * @param {Container} boardContainer
+ * @param {string} square - Chess square (e.g., "A1", "H8", or even "K14")
+ * @param {string} piece - The piece to place (e.g., "K", "q")
+ * @param {number} freezeUntil - Game time until which this square is frozen
+ */
+function add(board, boardContainer, square, piece, freezeUntil) {
+  console.log(`add ${piece} on ${square}, freeze until ${freezeUntil}`)
+  const [col, row] = squareCoordinates(square)
+  board.set(col, row, piece, freezeUntil)
+  const sprite = new Sprite(Assets.get(piece));
+  sprite.width = 1
+  sprite.height = 1
+  sprite.x = col
+  sprite.y = row // TODO or (boardContainer.height - 1) - row // invert y axis
+  boardContainer.addChild(sprite)
+}
 
 // FIXME demo code, remove soon
 // possibly invert coordinats like: container.scale.y = -1 => probably too much trouble, position sprites correctly instead
