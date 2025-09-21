@@ -20,7 +20,7 @@ export class State {
   /** @type {Container} */
   #boardContainer
 
-  /** @type {Map<string, Graphics>} */
+  /** @type {Map<string, Graphics>} - key is the square (e.g., "A1") */
   #plans = new Map()
 
   /**

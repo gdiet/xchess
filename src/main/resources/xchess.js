@@ -135,8 +135,8 @@ function receiveGameMessage(state) { return event => {
       plan(state, planFrom, planTo)
       break
     case "unplan":
-      const [unplanFrom, unplanTo] = args
-      unplan(state, unplanFrom, unplanTo)
+      const [unplanFrom] = args
+      unplan(state, unplanFrom)
       break
     case "start":
       console.log(`start`)
@@ -186,20 +186,18 @@ function plan(state, from, to) {
   arrow.position.y = .5 + toRow
   arrow.rotation = Math.atan2(fromRow - toRow, fromCol - toCol)
   state.boardContainer.addChild(arrow)
-  state.plans.set(`${from},${to}`, arrow)
+  state.plans.set(from, arrow)
 }
 
 /**
  * @param {State} state
  * @param {string} from
- * @param {string} to
  */
-function unplan(state, from, to) {
-  const key = `${from},${to}`
-  console.log(`unplan from ${from} to ${to}`)
-  const arrow = state.plans.get(key)
+function unplan(state, from) {
+  console.log(`unplan from ${from}`)
+  const arrow = state.plans.get(from)
   if (arrow) {
     state.boardContainer.removeChild(arrow)
-    state.plans.delete(key)
-  } else console.warn(`no plan from ${from} to ${to} found`)
+    state.plans.delete(from)
+  } else console.warn(`no plan from ${from} found`)
 }
