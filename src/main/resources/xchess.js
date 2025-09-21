@@ -46,7 +46,7 @@ function receiveClockInitialization(event) {
  */
 function receiveBoardSize(clock) { return event => {
   const [time, _board, _size, size, _freeze, freeze] = event.data.split(" ")
-  checkSync(clock, time)
+  clock.checkSync(time)
   console.log(`board size is ${size}, freeze time is ${freeze} ticks`)
   const [maxCol, maxRow] = parseSquare(size)
   const [cols, rows] = [maxCol + 1, maxRow + 1]
@@ -59,15 +59,6 @@ function receiveBoardSize(clock) { return event => {
   const state = new State(clock, maxCol, maxRow, boardContainer)
   ws.onmessage = receiveGameMessage(state)
 } }
-
-// Check whether the client clock is in sync with the server clock
-/**
- * @param {Clock} clock
- * @param {string} time
- */
-function checkSync(clock, time) {
-  if (clock.timeMillis !== Number(time)) console.warn(`clock desync: ${clock.timeMillis} != ${Number(time)}`)
-}
 
 /**
  * @param {string} squareString - Chess square (e.g., "A1", "H8", or even "K14")
@@ -130,7 +121,7 @@ function resizeChessBoard(chessBoardContainer,cols, rows) {
  */
 function receiveGameMessage(state) { return event => {
   const [time, command, ...args] = event.data.split(" ")
-  checkSync(state.clock, time)
+  state.clock.checkSync(time)
   switch(command) {
     case "add":
       const [square, piece, freezeUntil] = args

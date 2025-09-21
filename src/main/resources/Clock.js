@@ -10,6 +10,9 @@ export class Clock {
   /** @type {number | undefined} */
   #stoppedAt
 
+  /** @type {number} */
+  #maxDesyncMillis = 100 // accepted max desync without warning is 100 millis
+
   /**
    * @param {number} timeMillis
    * @param {number} millisPerTick
@@ -51,5 +54,15 @@ export class Clock {
    */
   millisUntil(gameTime) {
     return gameTime * this.#millisPerTick - this.timeMillis
+  }
+
+  /**
+   * @param {string} time
+   */
+  checkSync(time) {
+    if (Math.abs(this.timeMillis - Number(time)) > this.#maxDesyncMillis) {
+      this.#maxDesyncMillis = Math.abs(this.timeMillis - Number(time))
+      console.warn(`new max clock desync: ${this.#maxDesyncMillis} millis`)
+    }
   }
 }
