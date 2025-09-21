@@ -30,14 +30,17 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
     message.split(" ", 2) match
 
       case Array("start") =>
-        if clock.start() then scheduleNextMove()
-        broadcast("start")
+        if clock.isStopped then
+          broadcast("start")
+          clock.start()
+          scheduleNextMove()
 
       case Array("stop") =>
-        if clock.stop() then
+        if !clock.isStopped then
           nextScheduledMove.foreach(_.future.cancel(false))
           nextScheduledMove = None
-        broadcast("stop")
+          clock.stop()
+          broadcast("stop")
 
       case Array("chat", message) =>
         chat = message :: chat.take(4)
