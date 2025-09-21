@@ -75,7 +75,7 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
         case None =>
           doSchedule()
     }
-
+  
   private def advance(): Unit = synchronized {
     val time = clock.time
     println(s"[$id] advancing game at $time")
@@ -87,6 +87,8 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
     executedMoves.foreach(move =>
       broadcast(s"move ${move.from.string} ${move.to.string} ${time.value + options.freezeTicks}")
     )
+    nextScheduledMove = None
+    if !clock.isStopped then scheduleNextMove()
   }
 
   private def send(subscription: Subscription, message: String): Unit =
