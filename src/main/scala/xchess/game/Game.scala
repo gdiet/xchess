@@ -28,7 +28,6 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
   def receiveMessage(isWhite: Boolean, message: String): Unit = synchronized {
     println(s"[$id] received message: $message")
     message.split(" ", 2) match
-      // FIXME implement other cases
 
       case Array("start") =>
         if clock.start() then scheduleNextMove()
@@ -80,7 +79,7 @@ class Game(id: String, options: GameOptions, scheduler: ScheduledExecutorService
     val (newPlannedMoves, executedMoves, removedPlans) = plannedMoves.executePlans(time, options.freezeTicks)
     plannedMoves = newPlannedMoves
     removedPlans.foreach(plan =>
-      broadcast(s"remove ${plan.from.string}", plan.forWhite)
+      broadcast(s"unplan ${plan.from.string}", plan.forWhite)
     )
     executedMoves.foreach(move =>
       broadcast(s"move ${move.from.string} ${move.to.string} ${time.value + options.freezeTicks}")

@@ -2,7 +2,7 @@
 
 import { Clock } from './Clock.js'
 import { Board } from './Board.js'
-import { Container } from './pixi/pixi.mjs'
+import { Container, Graphics } from './pixi/pixi.mjs'
 
 export class State {
   /** @type {Clock} */
@@ -20,19 +20,22 @@ export class State {
   /** @type {Container} */
   #boardContainer
 
+  /** @type {Map<string, Graphics>} */
+  #plans = new Map()
+
   /**
    * @param {Clock} clock
    * @param {number} maxCol
    * @param {number} maxRow
-   * @param {Board} board
    * @param {Container} boardContainer
    */
-  constructor(clock, maxCol, maxRow, board, boardContainer) {
+  constructor(clock, maxCol, maxRow, boardContainer) {
     this.#clock = clock
     this.#maxCol = maxCol
     this.#maxRow = maxRow
-    this.#board = board
+    this.#board = new Board()
     this.#boardContainer = boardContainer
+    this.#plans = new Map()
   }
 
   get clock() { return this.#clock }
@@ -40,4 +43,5 @@ export class State {
   get maxRow() { return this.#maxRow }
   get board() { return this.#board }
   get boardContainer() { return this.#boardContainer }
+  get plans() { return this.#plans }
 }

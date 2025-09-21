@@ -56,7 +56,7 @@ function receiveBoardSize(clock) { return event => {
   // When the window is maximized/restored, the resize event may fire too early.
   // The zero timeout ensures that resizeChessBoard is called after the resize is done.
   window.addEventListener('resize', () => { setTimeout(() => resizeChessBoard(boardContainer, cols, rows), 0); })
-  const state = new State(clock, maxCol, maxRow, new Board(), boardContainer)
+  const state = new State(clock, maxCol, maxRow, boardContainer)
   ws.onmessage = receiveGameMessage(state)
 } }
 
@@ -139,9 +139,24 @@ function receiveGameMessage(state) { return event => {
     case "chat":
       console.log(`chat message: ${args.join(" ")}`)
       break
+    case "plan":
+      const [planFrom, planTo] = args
+      plan(state, planFrom, planTo)
+      break
+    case "unplan":
+      const [unplanFrom, unplanTo] = args
+      unplan(state, unplanFrom, unplanTo)
+      break
+    case "start":
+      console.log(`start`)
+      state.clock.start()
+      break
+    case "stop":
+      console.log(`stop`)
+      state.clock.stop()
+      break
     default:
-      plan(state, "D7", "D5") // FIXME demo code, remove soon
-      console.warn(`unknown command: ${command}`)
+      console.warn(`unknown command ${command}: ${event.data}`)
   }
 } }
 
@@ -169,6 +184,7 @@ function add(state, square, piece, freezeUntil) {
  * @param {string} to - e.g. "D5"
  */
 function plan(state, from, to) {
+  console.log(`plan from ${from} to ${to}`)
   const [fromCol, fromRow] = coordinates(state, from)
   const [toCol, toRow] = coordinates(state, to)
   const length = Math.sqrt((toRow - fromRow)**2 + (toCol - fromCol)**2)
@@ -179,5 +195,20 @@ function plan(state, from, to) {
   arrow.position.y = .5 + toRow
   arrow.rotation = Math.atan2(fromRow - toRow, fromCol - toCol)
   state.boardContainer.addChild(arrow)
+  state.plans.set(`${from},${to}`, arrow)
 }
 
+/**
+ * @param {State} state
+ * @param {string} from
+ * @param {string} to
+ */
+function unplan(state, from, to) {
+  const key = `${from},${to}`
+  console.log(`unplan from ${from} to ${to}`)
+  const arrow = state.plans.get(key)
+  if (arrow) {
+    state.boardContainer.removeChild(arrow)
+    state.plans.delete(key)
+  } else console.warn(`no plan from ${from} to ${to} found`)
+}
