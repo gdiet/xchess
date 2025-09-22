@@ -125,8 +125,8 @@ function receiveGameMessage(state) { return event => {
   state.clock.checkSync(time)
   switch(command) {
     case "add":
-      const [square, piece, freezeUntil] = args
-      add(state, square, piece, Number(freezeUntil))
+      const [addTo, piece, addFreezeUntil] = args
+      add(state, addTo, piece, Number(addFreezeUntil))
       break
     case "chat":
       console.log(`chat message: ${args.join(" ")}`)
@@ -138,6 +138,10 @@ function receiveGameMessage(state) { return event => {
     case "unplan":
       const [unplanFrom] = args
       unplan(state, unplanFrom)
+      break
+    case "move":
+      const [moveFrom, moveTo, moveFreezeUntil] = args
+      move(state, moveFrom, moveTo, Number(moveFreezeUntil))
       break
     case "start":
       console.log(`start`)
@@ -200,4 +204,33 @@ function unplan(state, from) {
     state.boardContainer.removeChild(arrow)
     state.plans.delete(from)
   } else console.warn(`no plan from ${from} found`)
+}
+
+/**
+ * @param {State} state
+ * @param {string} from - e.g. "D7"
+ * @param {string} to - e.g. "D5"
+ * @param {number} freezeUntil - Game time until which the destination square is frozen
+ */
+function move(state, from, to, freezeUntil) {
+  console.log(`move from ${from} to ${to}, freeze until ${freezeUntil}`)
+  console.log(`not implemented yet`)
+  // const [piece, _] = state.board.get(from) || []
+  // if (piece === undefined) { console.warn(`no piece at ${from} to move`); return }
+  // const [fromCol, fromRow] = coordinates(state, from)
+  // const [toCol, toRow] = coordinates(state, to)
+  // state.board.delete(fromCol, fromRow)
+  // state.board.set(toCol, toRow, piece, freezeUntil)
+  // // Remove the piece sprite from the container
+  // for (const child of state.boardContainer.children) {
+  //   if (child instanceof Sprite && child.x === fromCol && child.y === fromRow) {
+  //     state.boardContainer.removeChild(child)
+  //     break
+  //   }
+  // }
+  // // Add the piece sprite at the new position
+  // const sprite = new Sprite(Assets.get(piece))
+  // sprite.setSize(1, 1)
+  // sprite.position.set(toCol, toRow)
+  // state.boardContainer.addChild(sprite)
 }

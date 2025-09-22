@@ -1,7 +1,7 @@
 // @ts-check
 
 export class Board {
-  /** @type {Map<string, [string, number]>} */
+  /** @type {Map<string, [string, number]>} */ // FIXME consider removing the freezeUntil, it's not needed?
   #squares
 
   constructor() {
