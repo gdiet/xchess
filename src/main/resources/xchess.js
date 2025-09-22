@@ -166,7 +166,8 @@ function receiveGameMessage(state) { return event => {
  */
 function add(state, square, piece, freezeUntil) {
   console.log(`add ${piece} on ${square}, freeze until ${freezeUntil}`)
-  state.board.set(square, piece, freezeUntil)
+  // TODO show freezeUntil indicator on the board
+  state.board.set(square, piece)
   const sprite = new Sprite(Assets.get(piece))
   sprite.setSize(1, 1)
   sprite.position.set(...coordinates(state, square))

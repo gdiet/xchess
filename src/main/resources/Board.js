@@ -1,7 +1,7 @@
 // @ts-check
 
 export class Board {
-  /** @type {Map<string, [string, number]>} */ // FIXME consider removing the freezeUntil, it's not needed?
+  /** @type {Map<string, string>} - square -> piece */
   #squares
 
   constructor() {
@@ -10,7 +10,7 @@ export class Board {
 
   /**
    * @param {string} square - chess square (e.g., "A1")
-   * @returns {[string, number] | undefined} [piece, freezeUntil] or undefined if empty
+   * @returns {string | undefined} piece or undefined if empty
    */
   get(square) {
     return this.#squares.get(square)
@@ -19,10 +19,9 @@ export class Board {
   /**
    * @param {string} square - chess square (e.g., "A1")
    * @param {string} piece - the piece to place (e.g., "K", "q")
-   * @param {number} freezeUntil - game time until which this square is frozen
    */
-  set(square, piece, freezeUntil) {
-    this.#squares.set(square, [piece, freezeUntil])
+  set(square, piece) {
+    this.#squares.set(square, piece)
   }
 
   /**
