@@ -167,11 +167,11 @@ function receiveGameMessage(state) { return event => {
 function add(state, square, piece, freezeUntil) {
   console.log(`add ${piece} on ${square}, freeze until ${freezeUntil}`)
   // TODO show freezeUntil indicator on the board
-  state.board.set(square, piece)
   const sprite = new Sprite(Assets.get(piece))
   sprite.setSize(1, 1)
   sprite.position.set(...coordinates(state, square))
   state.boardContainer.addChild(sprite)
+  state.board.set(square, sprite, piece.toLowerCase() === 'p' || piece.toLowerCase() === 'm')
 }
 
 /**
@@ -215,23 +215,15 @@ function unplan(state, from) {
  */
 function move(state, from, to, freezeUntil) {
   console.log(`move from ${from} to ${to}, freeze until ${freezeUntil}`)
-  console.log(`not implemented yet`)
-  // const [piece, _] = state.board.get(from) || []
-  // if (piece === undefined) { console.warn(`no piece at ${from} to move`); return }
-  // const [fromCol, fromRow] = coordinates(state, from)
-  // const [toCol, toRow] = coordinates(state, to)
-  // state.board.delete(fromCol, fromRow)
-  // state.board.set(toCol, toRow, piece, freezeUntil)
-  // // Remove the piece sprite from the container
-  // for (const child of state.boardContainer.children) {
-  //   if (child instanceof Sprite && child.x === fromCol && child.y === fromRow) {
-  //     state.boardContainer.removeChild(child)
-  //     break
-  //   }
-  // }
-  // // Add the piece sprite at the new position
-  // const sprite = new Sprite(Assets.get(piece))
-  // sprite.setSize(1, 1)
-  // sprite.position.set(toCol, toRow)
-  // state.boardContainer.addChild(sprite)
+  const source = state.board.get(from)
+  if (source === undefined) { console.warn(`no piece at ${from} to move`); return }
+  const [sprite, isPawn] = source
+  // Capturing: If there is a piece at the target square, remove it from the container
+  const [targetSprite, _] = state.board.get(to) || []
+  if (targetSprite) state.boardContainer.removeChild(targetSprite)
+  // TODO Evaluate if pawn promotion is needed
+  sprite.position.set(...coordinates(state, to)) // TODO add animation
+  state.board.set(to, sprite, isPawn)
+  state.board.delete(from)
+  // TODO show freezeUntil indicator on the board
 }

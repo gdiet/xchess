@@ -1,7 +1,9 @@
 // @ts-check
 
+import { Sprite } from "./pixi/pixi.mjs"
+
 export class Board {
-  /** @type {Map<string, string>} - square -> piece */
+  /** @type {Map<string, [Sprite, boolean]>} - square -> [sprite, isPawn] */
   #squares
 
   constructor() {
@@ -10,7 +12,7 @@ export class Board {
 
   /**
    * @param {string} square - chess square (e.g., "A1")
-   * @returns {string | undefined} piece or undefined if empty
+   * @returns {[Sprite, boolean] | undefined} [sprite, isPawn] or undefined if empty
    */
   get(square) {
     return this.#squares.get(square)
@@ -18,10 +20,11 @@ export class Board {
 
   /**
    * @param {string} square - chess square (e.g., "A1")
-   * @param {string} piece - the piece to place (e.g., "K", "q")
+   * @param {Sprite} sprite
+   * @param {boolean} isPawn - true if the piece is a pawn
    */
-  set(square, piece) {
-    this.#squares.set(square, piece)
+  set(square, sprite, isPawn) {
+    this.#squares.set(square, [sprite, isPawn])
   }
 
   /**
