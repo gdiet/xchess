@@ -162,11 +162,10 @@ function receiveGameMessage(state) { return event => {
  */
 function add(state, square, piece, freezeUntil) {
   console.log(`add ${piece} on ${square}, freeze until ${freezeUntil}`)
-  const [col, row] = coordinates(state, square)
-  state.board.set(col, row, piece, freezeUntil)
+  state.board.set(square, piece, freezeUntil)
   const sprite = new Sprite(Assets.get(piece))
   sprite.setSize(1, 1)
-  sprite.position.set(col, row)
+  sprite.position.set(...coordinates(state, square))
   state.boardContainer.addChild(sprite)
 }
 
