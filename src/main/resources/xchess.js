@@ -1,6 +1,5 @@
 // @ts-check
 import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
-import { Board } from './Board.js'
 import { Clock } from './Clock.js'
 import { State } from './State.js'
 
@@ -17,8 +16,10 @@ document.body.replaceChildren(pixi.canvas)
 
 // Load piece images
 await Promise.all("BKNPQR".split("").map(async piece => {
-  await Assets.load({ alias: piece,               src: `pieces/w${piece}.svg`, data: { resolution: 2 } });
-  await Assets.load({ alias: piece.toLowerCase(), src: `pieces/b${piece}.svg`, data: { resolution: 2 } });
+  const aliasWhite = piece === 'P' ? ['P', 'M'] : [piece] // Moved pawn is 'M'/'m'
+  const aliasBlack = aliasWhite.map(p => p.toLowerCase())
+  await Assets.load({ alias: aliasWhite, src: `pieces/w${piece}.svg`, data: { resolution: 2 } });
+  await Assets.load({ alias: aliasBlack, src: `pieces/b${piece}.svg`, data: { resolution: 2 } });
 }));
 console.log(`images loaded`)
 
