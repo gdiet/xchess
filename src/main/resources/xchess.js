@@ -1,5 +1,5 @@
 // @ts-check
-import { Application, Assets, Container, Graphics, Sprite } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
+import { Application, Assets, Container, Graphics, Sprite, Ticker } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
 import { Clock } from './Clock.js'
 import { State } from './State.js'
 
@@ -13,6 +13,8 @@ console.log(`xChess game '${game}' as ${color}`)
 const pixi = new Application()
 await pixi.init({ background: '#1099bb', resizeTo: document.body })
 document.body.replaceChildren(pixi.canvas)
+const ticker = new Ticker()
+ticker.autoStart = true
 
 // Load piece images
 await Promise.all("BKNPQR".split("").map(async piece => {
@@ -222,8 +224,42 @@ function move(state, from, to, freezeUntil) {
   const [targetSprite, _] = state.board.get(to) || []
   if (targetSprite) state.boardContainer.removeChild(targetSprite)
   // TODO Evaluate if pawn promotion is needed
-  sprite.position.set(...coordinates(state, to)) // TODO add animation
+  animateMove(sprite, ...coordinates(state, from), ...coordinates(state, to))
   state.board.set(to, sprite, isPawn)
   state.board.delete(from)
   // TODO show freezeUntil indicator on the board
+}
+
+/**
+ * @param {Sprite} sprite
+ * @param {number} fromX
+ * @param {number} fromY
+ * @param {number} toX
+ * @param {number} toY
+ */
+function animateMove(sprite, fromX, fromY, toX, toY) {
+  let ticks = 20
+  const dx = (toX - fromX) / ticks
+  const dy = (toY - fromY) / ticks
+  function move() {
+    ticks = ticks - 1
+    if (ticks > 0) {
+      sprite.x = sprite.x + dx
+      sprite.y = sprite.y + dy
+    } else {
+      sprite.x = toX
+      sprite.y = toY
+      ticker.remove(move, undefined)
+    }
+    // TODO pawn promotion and freeze effect
+    // if (entry.piece == "Pawn" && (msg.y == 0 || msg.y == xc.y - 1)) {
+    //   entry.piece = "Queen"
+    //   xt.app.stage.removeChild(entry.sprite)
+    //   const sprite = addSpriteWithIce(xt, xc, entry.color, "Queen", msg.x, msg.y)
+    //   entry.sprite = sprite
+    //   console.log(`Promoted ${entry.color} pawn to queen.`)
+    // }
+    // if (msg.freeze || 0 > 500) showIce(xt, entry.sprite, msg.freeze)
+  }
+  ticker.add(move, undefined)
 }
