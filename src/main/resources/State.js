@@ -20,9 +20,6 @@ export class State {
   /** @type {Container} */
   #boardContainer
 
-  /** @type {Map<string, Graphics>} - key is the square (e.g., "A1") */
-  #plans = new Map()
-
   /**
    * @param {Clock} clock
    * @param {number} maxCol
@@ -35,7 +32,6 @@ export class State {
     this.#maxRow = maxRow
     this.#board = new Board()
     this.#boardContainer = boardContainer
-    this.#plans = new Map()
   }
 
   get clock() { return this.#clock }
@@ -43,5 +39,4 @@ export class State {
   get maxRow() { return this.#maxRow }
   get board() { return this.#board }
   get boardContainer() { return this.#boardContainer }
-  get plans() { return this.#plans }
 }

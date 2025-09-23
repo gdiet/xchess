@@ -1,9 +1,29 @@
 // @ts-check
 
-import { Sprite } from "./pixi/pixi.mjs"
+import { Graphics, Sprite } from "./pixi/pixi.mjs"
+
+export class Field {
+  /**
+   * @param {Sprite} sprite
+   * @param {boolean} isPawn - true if the piece is a pawn
+   */
+  constructor(sprite, isPawn) {
+    this.sprite = sprite
+    this.isPawn = isPawn
+  }
+
+  /** @type {Sprite} */
+  sprite
+
+  /** @type {boolean} */
+  isPawn
+
+  /** @type {Graphics | undefined} */
+  plan
+}
 
 export class Board {
-  /** @type {Map<string, [Sprite, boolean]>} - square -> [sprite, isPawn] */
+  /** @type {Map<string, Field>} - square -> Field */
   #squares
 
   constructor() {
@@ -12,7 +32,7 @@ export class Board {
 
   /**
    * @param {string} square - chess square (e.g., "A1")
-   * @returns {[Sprite, boolean] | undefined} [sprite, isPawn] or undefined if empty
+   * @returns {Field | undefined}
    */
   get(square) {
     return this.#squares.get(square)
@@ -20,11 +40,18 @@ export class Board {
 
   /**
    * @param {string} square - chess square (e.g., "A1")
-   * @param {Sprite} sprite
-   * @param {boolean} isPawn - true if the piece is a pawn
+   * @returns {Field}
    */
-  set(square, sprite, isPawn) {
-    this.#squares.set(square, [sprite, isPawn])
+  at(square) {
+    return this.#squares.get(square) || (() => { throw new Error(`no piece at ${square}`) })()
+  }
+
+  /**
+   * @param {string} square - chess square (e.g., "A1")
+   * @param {Field} field
+   */
+  set(square, field) {
+    this.#squares.set(square, field)
   }
 
   /**

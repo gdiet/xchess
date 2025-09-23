@@ -2,6 +2,7 @@
 import { Application, Assets, Container, Graphics, Sprite, Ticker } from './pixi/pixi.mjs' // For release, use pixi/pixi.min.mjs
 import { Clock } from './Clock.js'
 import { State } from './State.js'
+import { Field } from './Board.js'
 
 // Get game and color from URL parameters
 const game = new URLSearchParams(window.location.search).get('game') || 'test'
@@ -173,7 +174,8 @@ function add(state, square, piece, freezeUntil) {
   sprite.setSize(1, 1)
   sprite.position.set(...coordinates(state, square))
   state.boardContainer.addChild(sprite)
-  state.board.set(square, sprite, piece.toLowerCase() === 'p' || piece.toLowerCase() === 'm')
+  const isPawn = piece.toLowerCase() === 'p' || piece.toLowerCase() === 'm'
+  state.board.set(square, new Field(sprite, isPawn))
 }
 
 /**
@@ -193,7 +195,7 @@ function plan(state, from, to) {
   arrow.position.y = .5 + toRow
   arrow.rotation = Math.atan2(fromRow - toRow, fromCol - toCol)
   state.boardContainer.addChild(arrow)
-  state.plans.set(from, arrow)
+  state.board.at(from).plan = arrow
 }
 
 /**
@@ -202,10 +204,10 @@ function plan(state, from, to) {
  */
 function unplan(state, from) {
   console.log(`unplan from ${from}`)
-  const arrow = state.plans.get(from)
-  if (arrow) {
-    state.boardContainer.removeChild(arrow)
-    state.plans.delete(from)
+  const field = state.board.at(from)
+  if (field.plan) {
+    state.boardContainer.removeChild(field.plan)
+    field.plan = undefined
   } else console.warn(`no plan from ${from} found`)
 }
 
@@ -216,17 +218,23 @@ function unplan(state, from) {
  * @param {number} freezeUntil - Game time until which the destination square is frozen
  */
 function move(state, from, to, freezeUntil) {
+  // TODO order of things:
+  // 1. animate piece from 'from' to 'to'
+  // 2. if there is a piece at 'to', remove it from the container, along with its snowflake and plan arrow if any (capturing)
+  // 3. remove plan arrow
+  // 4. if the piece is a pawn and reaches the last row, promote it to a queen
+  // 5. show freezeUntil indicator on the board
+
   console.log(`move from ${from} to ${to}, freeze until ${freezeUntil}`)
-  const source = state.board.get(from)
-  if (source === undefined) { console.warn(`no piece at ${from} to move`); return }
-  const [sprite, isPawn] = source
+  const field = state.board.get(from)
+  if (field === undefined) { console.warn(`no piece at ${from} to move`); return }
   // Capturing: If there is a piece at the target square, remove it from the container
-  const [targetSprite, _] = state.board.get(to) || []
-  if (targetSprite) state.boardContainer.removeChild(targetSprite)
+  const target = state.board.get(to)
+  if (target) state.boardContainer.removeChild(target.sprite, target.plan)
   // TODO Evaluate if pawn promotion is needed
-  animateMove(sprite, ...coordinates(state, from), ...coordinates(state, to))
-  state.board.set(to, sprite, isPawn)
   state.board.delete(from)
+  state.board.set(to, field)
+  animateMove(field.sprite, ...coordinates(state, from), ...coordinates(state, to))
   // TODO show freezeUntil indicator on the board
 }
 
